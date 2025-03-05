@@ -1,0 +1,98 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+require 'bundler/setup'
+require 'open3'
+require 'httparty'
+require 'yaml'
+require_relative '../lib/committer/config'
+require_relative '../lib/clients/claude_client'
+
+# Handle command line arguments
+command = ARGV[0]
+
+case command
+when 'setup'
+  Committer::Config.setup
+  exit 0
+
+when 'help', '--help', '-h'
+  puts 'Committer - AI-powered git commit message generator'
+  puts
+  puts 'Commands:'
+  puts '  committer setup  - Create the config file template at ~/.committer/config.yml'
+  puts '  committer        - Generate commit message for staged changes'
+  puts
+  exit 0
+end
+
+# Default behavior: generate commit message
+def execute_git_diff_staged
+  stdout, stderr, status = Open3.capture3('git diff --staged')
+
+  if status.success?
+    if stdout.empty?
+      puts 'No changes are staged for commit.'
+      exit 0
+    else
+      begin
+        client = Clients::ClaudeClient.new
+        puts 'Sending diff to Claude...'
+
+        prompt = <<~PROMPT
+          Below is a git diff of staged changes. Please analyze it and create a commit message following the Conventional Commits format:
+
+          Format: <type>(<optional scope>): <description>
+
+          Types:
+          - feat: A new feature
+          - fix: A bug fix
+          - docs: Documentation only changes
+          - style: Changes that do not affect the meaning of the code
+          - refactor: A code change that neither fixes a bug nor adds a feature
+          - perf: A code change that improves performance
+          - test: Adding missing tests or correcting existing tests
+          - chore: Changes to the build process or auxiliary tools
+
+          Guidelines:
+          - Keep the first line under 70 characters
+          - Use imperative, present tense (e.g., "add" not "added" or "adds")
+          - Do not end with a period
+          - Be concise but descriptive
+
+          Git Diff:
+          ```
+          #{stdout}
+          ```
+
+          Respond ONLY with the commit message text, nothing else.
+        PROMPT
+
+        response = client.post(prompt)
+        commit_message = begin
+          response.dig('content', 0, 'text')
+        rescue StandardError
+          response.inspect
+        end
+
+        puts "\nOpening git commit with the suggested message..."
+
+        # Create git commit with the suggested message and open in editor
+        system('git', 'commit', '-m', commit_message, '-e')
+      rescue Clients::ClaudeClient::ConfigError => e
+        puts "Error: #{e.message}"
+        exit 1
+      rescue StandardError => e
+        puts "Error: #{e.message}"
+        exit 1
+      end
+    end
+  else
+    puts 'Error executing git diff --staged:'
+    puts stderr
+    exit 1
+  end
+end
+
+# Execute the function if no specific command was given
+execute_git_diff_staged
