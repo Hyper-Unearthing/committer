@@ -1,0 +1,10 @@
+{
+  "id": "msg_sample9876543210",
+  "type": "message",
+  "content": [
+    {
+      "type": "text",
+      "text": "chore: bump version from 0.1.0 to 0.1.1\n\nIncremented patch version for the next release. This update includes bug fixes and performance improvements."
+    }
+  ]
+}
