@@ -17,17 +17,17 @@ module Committer
       - perf: A code change that improves performance
       - test: Adding missing tests or correcting existing tests
       - chore: Changes to the build process or auxiliary tools
-      %<scopes_section>
+      %<scopes_section>s
       Guidelines:
       - Keep the summary under 70 characters
       - Use imperative, present tense (e.g., "add" not "added" or "adds")
       - Do not end the summary with a period
       - Be concise but descriptive in the summary
-      %<scope_instruction>
+      %<scope_instruction>s
 
       Git Diff:
       ```
-      %<diff>
+      %<diff>s
       ```
 
       Respond ONLY with the commit message summary line, nothing else.
@@ -58,7 +58,7 @@ module Committer
       - perf: A code change that improves performance
       - test: Adding missing tests or correcting existing tests
       - chore: Changes to the build process or auxiliary tools
-      %<scopes_section>
+      %<scopes_section>s
       Guidelines:
       - Keep the first line (summary) under 70 characters
       - Use imperative, present tense (e.g., "add" not "added" or "adds")
@@ -68,13 +68,13 @@ module Committer
       - Use the body to explain why the change was made, incorporating the user's context
       - Wrap each line in the body at 80 characters maximum
       - Break the body into multiple paragraphs if needed
-      %<scope_instruction>
+      %<scope_instruction>s
 
-      User's context for this change: %<commit_context>
+      User's context for this change: %<commit_context>s
 
       Git Diff:
       ```
-      %<diff>
+      %<diff>s
       ```
 
       Respond ONLY with the commit message text (summary and body), nothing else.
