@@ -5,6 +5,7 @@ require 'httparty'
 require_relative '../committer/config'
 
 module Clients
+  # Claude API client for communicating with Anthropic's Claude model
   class ClaudeClient
     class OverloadError < StandardError; end
     class UnknownError < StandardError; end
@@ -21,13 +22,28 @@ module Clients
 
     def post(message)
       body = {
-        'model': @config['model'],
-        'max_tokens': 4096,
-        'messages': [
-          { 'role': 'user', 'content': message }
+        model: @config['model'],
+        max_tokens: 4096,
+        messages: [
+          { role: 'user', content: message }
         ]
       }
-      options = {
+
+      response = send_request(body)
+      handle_error_response(response) if response['type'] == 'error'
+
+      response
+    end
+
+    private
+
+    def send_request(body)
+      options = build_request_options(body)
+      HTTParty.post('https://api.anthropic.com/v1/messages', options)
+    end
+
+    def build_request_options(body)
+      {
         headers: {
           'anthropic-version': '2023-06-01',
           'content-type': 'application/json',
@@ -35,17 +51,14 @@ module Clients
         },
         body: body.to_json
       }
-      response = HTTParty.post(
-        'https://api.anthropic.com/v1/messages', options
-      )
-      if response['type'] == 'error'
-        error = response['error']
-        raise OverloadError if error['type'] == 'overloaded_error'
+    end
 
-        puts response
-        raise UnknownError, "Claude API error: #{response.inspect}"
-      end
-      response
+    def handle_error_response(response)
+      error = response['error']
+      raise OverloadError if error['type'] == 'overloaded_error'
+
+      puts response
+      raise UnknownError, "Claude API error: #{response.inspect}"
     end
   end
 end
