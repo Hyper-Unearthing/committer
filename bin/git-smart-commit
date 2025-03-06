@@ -1,8 +1,0 @@
-#!/usr/bin/env ruby
-# frozen_string_literal: true
-
-# This is a git integration script that allows users to run:
-# git smart-commit
-# which will forward to the committer command
-
-require_relative 'committer'

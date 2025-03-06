@@ -16,7 +16,7 @@ Gem::Specification.new do |spec|
 
   spec.files = Dir['lib/**/*', 'bin/*', 'README.md', 'LICENSE.txt']
   spec.bindir = 'bin'
-  spec.executables = %w[git-smart-commit committer]
+  spec.executables = %w[git-smart-commit]
   spec.require_paths = ['lib']
 
   spec.add_dependency 'httparty', '~> 0.20'
