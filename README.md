@@ -75,12 +75,6 @@ This will:
 - `committer setup` - Create the config file template
 - `committer help` - Display help information
 
-You can also run it directly through git:
-
-```bash
-git smart-commit
-```
-
 ## License
 
 MIT
