@@ -7,3 +7,6 @@ Metrics/MethodLength:
 
 Metrics/AbcSize:
   Max: 20
+
+Style/Documentation:
+  Enabled: false
