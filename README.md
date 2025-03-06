@@ -81,6 +81,17 @@ This will:
 - `committer setup` - Create the config file template
 - `committer help` - Display help information
 
+## Development
+
+### Running Tests
+
+Committer uses RSpec for testing. To run the tests:
+
+```bash
+bundle install
+bundle exec rake spec
+```
+
 ## License
 
 MIT
