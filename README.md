@@ -6,7 +6,7 @@ An AI-powered git commit message generator using Claude.
 
 The goal of committer is to make it easier to write beautiful commits.
 
-Committer uses Claude AI to analyze your staged git changes and generate conventional commit messages for you. It detects the type of changes (feature, fix, refactor, etc.) and creates a well-formatted commit message that follows best practices.
+Committer uses Claude AI to analyze your staged git changes and generate [conventional commit](https://www.conventionalcommits.org/en/v1.0.0/) messages for you. It detects the type of changes (feature, fix, refactor, etc.) and creates a well-formatted commit message that follows best practices.
 
 ## What Makes a Good Commit
 
@@ -23,7 +23,7 @@ Committer analyzes your code changes and generates commit messages that:
 
 1. Provide a clean, descriptive summary of the change
 2. Include context about why the change was necessary
-3. Follow conventional commit format for consistency
+3. Follow [conventional commit](https://www.conventionalcommits.org/en/v1.0.0/) format for consistency
 
 ## Installation
 
@@ -54,7 +54,7 @@ scopes:
   - ui
 ```
 
-The `scopes` configuration is optional. When provided, Committer will generate conventional commit messages with scopes (like `feat(api): add new endpoint`). If left as `null` or omitted, commit messages will be generated without scopes (like `feat: add new endpoint`).
+The `scopes` configuration is optional. When provided, Committer will generate [conventional commit](https://www.conventionalcommits.org/en/v1.0.0/) messages with scopes (like `feat(api): add new endpoint`). If left as `null` or omitted, commit messages will be generated without scopes (like `feat: add new endpoint`).
 
 You only need to do this setup once.
 
@@ -71,7 +71,7 @@ This will:
 1. Get the diff of your staged changes
 2. Ask you for optional context about why you're making the change
 3. Send the diff and context to Claude for analysis
-4. Generate a commit message in conventional format (with scope if configured)
+4. Generate a commit message in [conventional commit](https://www.conventionalcommits.org/en/v1.0.0/) format (with scope if configured)
 5. Open your default git editor with the suggested message
 6. Allow you to edit the message if needed or simply save to confirm
 
