@@ -19,7 +19,8 @@ module Committer
       begin
         YAML.load_file(CONFIG_FILE) || DEFAULT_CONFIG
       rescue StandardError => e
-        puts "Error loading config: #{e.message}"
+        # Use $stdout directly for better test capture
+        $stdout.puts "Error loading config: #{e.message}"
         DEFAULT_CONFIG
       end
     end
