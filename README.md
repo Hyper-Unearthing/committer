@@ -11,6 +11,7 @@ Committer uses Claude AI to analyze your staged git changes and generate convent
 ## What Makes a Good Commit
 
 A good commit should:
+
 - Have a summary that clearly describes the change
 - Explain WHY the change was made, not just what changed
 
@@ -19,6 +20,7 @@ When a future developer uses git blame to understand a line of code, they should
 ## How Committer Helps
 
 Committer analyzes your code changes and generates commit messages that:
+
 1. Provide a clean, descriptive summary of the change
 2. Include context about why the change was necessary
 3. Follow conventional commit format for consistency
@@ -30,26 +32,6 @@ Committer analyzes your code changes and generates commit messages that:
 ```bash
 gem install committer
 ```
-
-### Manual Installation
-
-1. Install Bundler if you haven't already:
-
-   ```sh
-   gem install bundler
-   ```
-
-2. Install the project dependencies:
-
-   ```sh
-   bundle install
-   ```
-
-3. Link the executable:
-   ```bash
-   gem build committer.gemspec
-   gem install committer-0.1.0.gem
-   ```
 
 ## Configuration
 
