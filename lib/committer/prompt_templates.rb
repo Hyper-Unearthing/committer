@@ -5,7 +5,8 @@ module Committer
     SUMMARY_ONLY = <<~PROMPT
       Below is a git diff of staged changes. Please analyze it and create a commit message following the Conventional Commits format with ONLY a summary line (NO body):
 
-      Format: <type>(<optional scope>): <description>
+      Format when scopes are available: <type>(<scope>): <description>
+      Format when no scopes are available: <type>: <description>
 
       Types:
       - feat: A new feature
@@ -16,16 +17,17 @@ module Committer
       - perf: A code change that improves performance
       - test: Adding missing tests or correcting existing tests
       - chore: Changes to the build process or auxiliary tools
-
+      %<scopes_section>
       Guidelines:
       - Keep the summary under 70 characters
       - Use imperative, present tense (e.g., "add" not "added" or "adds")
       - Do not end the summary with a period
       - Be concise but descriptive in the summary
+      %<scope_instruction>
 
       Git Diff:
       ```
-      %<diff>s
+      %<diff>
       ```
 
       Respond ONLY with the commit message summary line, nothing else.
@@ -34,10 +36,18 @@ module Committer
     SUMMARY_AND_BODY = <<~PROMPT
       Below is a git diff of staged changes. Please analyze it and create a commit message following the Conventional Commits format with a summary line and a detailed body:
 
-      Format: <type>(<optional scope>): <description>
+      Format when scopes are available:
+      <type>(<scope>): <description>
 
       <blank line>
       <body with more detailed explanation>
+
+      Format when no scopes are available:
+      <type>: <description>
+
+      <blank line>
+      <body with more detailed explanation>
+
 
       Types:
       - feat: A new feature
@@ -48,7 +58,7 @@ module Committer
       - perf: A code change that improves performance
       - test: Adding missing tests or correcting existing tests
       - chore: Changes to the build process or auxiliary tools
-
+      %<scopes_section>
       Guidelines:
       - Keep the first line (summary) under 70 characters
       - Use imperative, present tense (e.g., "add" not "added" or "adds")
@@ -58,12 +68,13 @@ module Committer
       - Use the body to explain why the change was made, incorporating the user's context
       - Wrap each line in the body at 80 characters maximum
       - Break the body into multiple paragraphs if needed
+      %<scope_instruction>
 
-      User's context for this change: %<commit_context>s
+      User's context for this change: %<commit_context>
 
       Git Diff:
       ```
-      %<diff>s
+      %<diff>
       ```
 
       Respond ONLY with the commit message text (summary and body), nothing else.
