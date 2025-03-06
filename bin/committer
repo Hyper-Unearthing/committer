@@ -6,6 +6,7 @@ require 'open3'
 require 'httparty'
 require 'yaml'
 require_relative '../lib/committer/config'
+require_relative '../lib/committer/prompt_templates'
 require_relative '../lib/clients/claude_client'
 
 # Handle command line arguments
@@ -27,144 +28,80 @@ when 'help', '--help', '-h'
 end
 
 # Default behavior: generate commit message
-def execute_git_diff_staged
+def build_commit_prompt(diff, commit_context = nil)
+  if commit_context.nil? || commit_context.empty?
+    format(Committer::PromptTemplates::SUMMARY_ONLY, diff: diff)
+  else
+    format(Committer::PromptTemplates::SUMMARY_AND_BODY, diff: diff, commit_context: commit_context)
+  end
+end
+
+def check_git_status
   stdout, stderr, status = Open3.capture3('git diff --staged')
 
-  if status.success?
-    if stdout.empty?
-      puts 'No changes are staged for commit.'
-      exit 0
-    else
-      begin
-        client = Clients::ClaudeClient.new
-        
-        # Prompt user for commit context
-        puts 'Why are you making this change? (Press Enter to skip)'
-        commit_context = gets.chomp
-        
-        puts 'Sending diff to Claude...'
-
-        # If user provided context, ask for body. Otherwise, just ask for summary.
-        if commit_context.empty?
-          prompt = <<~PROMPT
-            Below is a git diff of staged changes. Please analyze it and create a commit message following the Conventional Commits format with ONLY a summary line (NO body):
-
-            Format:#{' '}
-            <type>(<optional scope>): <description>
-
-            Types:
-            - feat: A new feature
-            - fix: A bug fix
-            - docs: Documentation only changes
-            - style: Changes that do not affect the meaning of the code
-            - refactor: A code change that neither fixes a bug nor adds a feature
-            - perf: A code change that improves performance
-            - test: Adding missing tests or correcting existing tests
-            - chore: Changes to the build process or auxiliary tools
-
-            Guidelines:
-            - Keep the summary under 70 characters
-            - Use imperative, present tense (e.g., "add" not "added" or "adds")
-            - Do not end the summary with a period
-            - Be concise but descriptive in the summary
-            
-            Git Diff:
-            ```
-            #{stdout}
-            ```
-
-            Respond ONLY with the commit message summary line, nothing else.
-          PROMPT
-        else
-          prompt = <<~PROMPT
-            Below is a git diff of staged changes. Please analyze it and create a commit message following the Conventional Commits format with a summary line and a detailed body:
-
-            Format:#{' '}
-            <type>(<optional scope>): <description>
-
-            <blank line>
-            <body with more detailed explanation>
-
-            Types:
-            - feat: A new feature
-            - fix: A bug fix
-            - docs: Documentation only changes
-            - style: Changes that do not affect the meaning of the code
-            - refactor: A code change that neither fixes a bug nor adds a feature
-            - perf: A code change that improves performance
-            - test: Adding missing tests or correcting existing tests
-            - chore: Changes to the build process or auxiliary tools
-
-            Guidelines:
-            - Keep the first line (summary) under 70 characters
-            - Use imperative, present tense (e.g., "add" not "added" or "adds")
-            - Do not end the summary with a period
-            - Be concise but descriptive in the summary
-            - Add a blank line between summary and body
-            - Use the body to explain why the change was made, incorporating the user's context
-            - Wrap each line in the body at 80 characters maximum
-            - Break the body into multiple paragraphs if needed
-            
-            User's context for this change: #{commit_context}
-
-            Git Diff:
-            ```
-            #{stdout}
-            ```
-
-            Respond ONLY with the commit message text (summary and body), nothing else.
-          PROMPT
-        end
-
-        response = client.post(prompt)
-        commit_message_text = begin
-          response.dig('content', 0, 'text')
-        rescue StandardError
-          response.inspect
-        end
-
-        # If user didn't provide context, response should only be a summary line
-        if commit_context.empty?
-          summary = commit_message_text.strip
-          body = nil
-        else
-          # Split the response into summary and body
-          message_parts = commit_message_text.split("\n\n", 2)
-          summary = message_parts[0].strip
-          body = message_parts[1]&.strip
-
-          # Wrap body text at 80 characters
-          if body
-            wrapped_body = body.gsub(/(.{1,80})(\s+|$)/, "\\1\n").strip
-            body = wrapped_body
-          end
-        end
-
-        puts "\nGenerated commit message:"
-        puts "Summary: #{summary}"
-        puts "Body: #{body}" if body
-
-        puts "\nOpening git commit with the suggested message..."
-
-        # Create git commit with the suggested message and open in editor
-        if body
-          system('git', 'commit', '-m', summary, '-m', body, '-e')
-        else
-          system('git', 'commit', '-m', summary, '-e')
-        end
-      rescue Clients::ClaudeClient::ConfigError => e
-        puts "Error: #{e.message}"
-        exit 1
-      rescue StandardError => e
-        puts "Error: #{e.message}"
-        exit 1
-      end
-    end
-  else
+  unless status.success?
     puts 'Error executing git diff --staged:'
     puts stderr
     exit 1
   end
+
+  if stdout.empty?
+    puts 'No changes are staged for commit.'
+    exit 0
+  end
+
+  stdout
+end
+
+def parse_response(response, commit_context)
+  text = response.dig('content', 0, 'text')
+
+  # If user didn't provide context, response should only be a summary line
+  if commit_context.nil? || commit_context.empty?
+    { summary: text.strip, body: nil }
+  else
+    # Split the response into summary and body
+    message_parts = text.split("\n\n", 2)
+    summary = message_parts[0].strip
+    body = message_parts[1]&.strip
+
+    # Wrap body text at 80 characters
+    body = body.gsub(/(.{1,80})(\s+|$)/, "\\1\n").strip if body
+
+    { summary: summary, body: body }
+  end
+end
+
+def prepare_commit_message(diff, commit_context = nil)
+  client = Clients::ClaudeClient.new
+  puts 'Sending diff to Claude...'
+
+  prompt = build_commit_prompt(diff, commit_context)
+  response = client.post(prompt)
+  parse_response(response, commit_context)
+end
+
+def execute_git_diff_staged
+  diff = check_git_status
+
+  # Prompt user for commit context
+  puts 'Why are you making this change? (Press Enter to skip)'
+  commit_context = gets.chomp
+
+  commit_message = prepare_commit_message(diff, commit_context)
+
+  summary = commit_message[:summary]
+  body = commit_message[:body]
+
+  # Create git commit with the suggested message and open in editor
+  if body
+    system('git', 'commit', '-m', summary, '-m', body, '-e')
+  else
+    system('git', 'commit', '-m', summary, '-e')
+  end
+rescue Clients::ClaudeClient::ConfigError, StandardError => e
+  puts "Error: #{e.message}"
+  exit 1
 end
 
 # Execute the function if no specific command was given

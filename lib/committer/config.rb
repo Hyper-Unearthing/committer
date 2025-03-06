@@ -4,6 +4,7 @@ require 'yaml'
 require 'fileutils'
 
 module Committer
+  # Configuration management for the Committer gem
   class Config
     CONFIG_DIR = File.join(Dir.home, '.committer')
     CONFIG_FILE = File.join(CONFIG_DIR, 'config.yml')
@@ -23,7 +24,7 @@ module Committer
     end
 
     def self.create_default_config
-      FileUtils.mkdir_p(CONFIG_DIR) unless Dir.exist?(CONFIG_DIR)
+      FileUtils.mkdir_p(CONFIG_DIR)
       File.write(CONFIG_FILE, DEFAULT_CONFIG.to_yaml)
     end
 
