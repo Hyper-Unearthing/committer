@@ -23,6 +23,7 @@ gem install committer
    ```
 
 2. Install the project dependencies:
+
    ```sh
    bundle install
    ```
@@ -47,7 +48,7 @@ Next, edit this file to add your Anthropic API key and optionally change the mod
 
 ```yaml
 api_key: your_anthropic_api_key_here
-model: claude-3-sonnet-20240229
+model: claude-3-7-sonnet-20250219
 ```
 
 You only need to do this setup once.
@@ -61,6 +62,7 @@ committer
 ```
 
 This will:
+
 1. Get the diff of your staged changes
 2. Send it to Claude for analysis
 3. Generate a commit message in conventional format

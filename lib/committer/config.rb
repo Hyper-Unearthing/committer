@@ -10,7 +10,8 @@ module Committer
     CONFIG_FILE = File.join(CONFIG_DIR, 'config.yml')
     DEFAULT_CONFIG = {
       'api_key' => nil,
-      'model' => 'claude-3-sonnet-20240229'
+      'model' => 'claude-3-7-sonnet-20250219',
+      'scopes' => nil
     }.freeze
 
     def self.load
@@ -36,7 +37,11 @@ module Committer
       puts 'Example config format:'
       puts '---'
       puts 'api_key: your_api_key_here'
-      puts 'model: claude-3-sonnet-20240229'
+      puts 'model: claude-3-7-sonnet-20250219'
+      puts 'scopes:'
+      puts '  - feature'
+      puts '  - api'
+      puts '  - ui'
     end
   end
 end

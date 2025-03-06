@@ -29,10 +29,25 @@ end
 
 # Default behavior: generate commit message
 def build_commit_prompt(diff, commit_context = nil)
+  scopes = Committer::Config.load
+  scope_section = scopes.empty? ? '' : "\nScopes:\n#{scopes.map { |s| "- #{s}" }.join("\n")}"
+  scope_instruction = if scopes.empty?
+                        '- DO NOT include a scope in your commit message'
+                      else
+                        '- Choose an appropriate scope from the list above if relevant to the change'
+                      end
+  format(template(commit_context),
+         diff: diff,
+         scopes_section: scope_section,
+         scope_instruction: scope_instruction,
+         commit_context: commit_context)
+end
+
+def template(commit_context)
   if commit_context.nil? || commit_context.empty?
-    format(Committer::PromptTemplates::SUMMARY_ONLY, diff: diff)
+    Committer::PromptTemplates::SUMMARY_ONLY
   else
-    format(Committer::PromptTemplates::SUMMARY_AND_BODY, diff: diff, commit_context: commit_context)
+    Committer::PromptTemplates::SUMMARY_AND_BODY
   end
 end
 
