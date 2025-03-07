@@ -2,82 +2,71 @@
 
 module Committer
   module PromptTemplates
-    SUMMARY_ONLY = <<~PROMPT
-      Below is a git diff of staged changes. Please analyze it and create a commit message following the Conventional Commits format with ONLY a summary line (NO body):
+    FORMATTING_RULES_PATH = File.join(File.dirname(__FILE__), 'formatting_rules.txt')
 
-      Format when scopes are available: <type>(<scope>): <description>
-      Format when no scopes are available: <type>: <description>
+    def self.load_formatting_rules
+      File.read(FORMATTING_RULES_PATH)
+    end
 
-      Types:
-      - feat: A new feature
-      - fix: A bug fix
-      - docs: Documentation only changes
-      - style: Changes that do not affect the meaning of the code
-      - refactor: A code change that neither fixes a bug nor adds a feature
-      - perf: A code change that improves performance
-      - test: Adding missing tests or correcting existing tests
-      - chore: Changes to the build process or auxiliary tools
-      %<scopes_section>s
-      Guidelines:
-      - Keep the summary under 70 characters
-      - Use imperative, present tense (e.g., "add" not "added" or "adds")
-      - Do not end the summary with a period
-      - Be concise but descriptive in the summary
-      %<scope_instruction>s
+    def self.load_scopes
+      scopes = Committer::Config.load[:scopes] || []
+      return 'DO NOT include a scope in your commit message' if scopes.empty?
 
-      Git Diff:
-      ```
-      %<diff>s
-      ```
+      scope_list = "\nScopes:\n#{scopes.map { |s| "- #{s}" }.join("\n")}"
 
-      Respond ONLY with the commit message summary line, nothing else.
-    PROMPT
+      "- Choose an appropriate scope from the list above if relevant to the change \n#{scope_list}"
+    end
 
-    SUMMARY_AND_BODY = <<~PROMPT
-      Below is a git diff of staged changes. Please analyze it and create a commit message following the Conventional Commits format with a summary line and a detailed body:
+    def self.commit_message_guidelines
+      <<~PROMPT
+        #{load_formatting_rules}
 
-      Format when scopes are available:
-      <type>(<scope>): <description>
+        # Formatting rules with body:
+        <message>
 
-      <blank line>
-      <body with more detailed explanation>
+        <blank line>
+        <body with more detailed explanation>
 
-      Format when no scopes are available:
-      <type>: <description>
+        #{load_scopes}
 
-      <blank line>
-      <body with more detailed explanation>
+        # Message Guidelines:
+        - Keep the summary under 70 characters
+        - Use imperative, present tense (e.g., "add" not "added" or "adds")
+        - Do not end the summary with a period
+        - Be concise but descriptive in the summary
 
+        # Body Guidelines:
+        - Add a blank line between summary and body
+        - Use the body to explain why the change was made, incorporating the user's context
+        - Wrap each line in the body at 80 characters maximum
+        - Break the body into multiple paragraphs if needed
 
-      Types:
-      - feat: A new feature
-      - fix: A bug fix
-      - docs: Documentation only changes
-      - style: Changes that do not affect the meaning of the code
-      - refactor: A code change that neither fixes a bug nor adds a feature
-      - perf: A code change that improves performance
-      - test: Adding missing tests or correcting existing tests
-      - chore: Changes to the build process or auxiliary tools
-      %<scopes_section>s
-      Guidelines:
-      - Keep the first line (summary) under 70 characters
-      - Use imperative, present tense (e.g., "add" not "added" or "adds")
-      - Do not end the summary with a period
-      - Be concise but descriptive in the summary
-      - Add a blank line between summary and body
-      - Use the body to explain why the change was made, incorporating the user's context
-      - Wrap each line in the body at 80 characters maximum
-      - Break the body into multiple paragraphs if needed
-      %<scope_instruction>s
+        Git Diff:
+        ```
+        %<diff>s
+        ```
+      PROMPT
+    end
 
-      User's context for this change: %<commit_context>s
+    def self.build_prompt_summary_only
+      <<~PROMPT
+        Below is a git diff of staged changes. Please analyze it and create a commit message following the formatting rules format with ONLY a message line (NO body):
 
-      Git Diff:
-      ```
-      %<diff>s
-      ```
+        #{commit_message_guidelines}
 
-      Respond ONLY with the commit message text (summary and body), nothing else.
-    PROMPT
+        Respond ONLY with the commit message line, nothing else.
+      PROMPT
+    end
+
+    def self.build_prompt_summary_and_body
+      <<~PROMPT
+        Below is a git diff of staged changes. Please analyze it and create a commit message following the formatting rules format with a summary line and a detailed body:
+
+        #{commit_message_guidelines}
+        User's context for this change: %<commit_context>s
+
+        Respond ONLY with the commit message text (message and body), nothing else.
+      PROMPT
+    end
   end
 end

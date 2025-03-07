@@ -59,7 +59,7 @@ RSpec.describe Committer::CommitGenerator do
         expect(generator).to receive(:template).and_call_original
         prompt = generator.build_commit_prompt
         expect(prompt).to include(commit_context)
-        expect(prompt).to include('Respond ONLY with the commit message text (summary and body), nothing else.')
+        expect(prompt).to include('Respond ONLY with the commit message text (message and body), nothing else.')
       end
     end
 
@@ -74,7 +74,7 @@ RSpec.describe Committer::CommitGenerator do
       it 'uses summary-only template when commit context is nil' do
         expect(generator).to receive(:template).and_call_original
         prompt = generator.build_commit_prompt
-        expect(prompt).to include('Respond ONLY with the commit message summary line, nothing else.')
+        expect(prompt).to include('Respond ONLY with the commit message line, nothing else.')
       end
     end
   end
