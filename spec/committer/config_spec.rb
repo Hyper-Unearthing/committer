@@ -8,93 +8,175 @@ RSpec.describe Committer::Config do
   let(:temp_home) { Dir.mktmpdir }
   let(:config_dir) { File.join(temp_home, '.committer') }
   let(:config_file) { File.join(config_dir, 'config.yml') }
+  let(:git_root) { Dir.mktmpdir }
+  let(:git_config_dir) { File.join(git_root, '.committer') }
+  let(:git_config_file) { File.join(git_config_dir, 'config.yml') }
+  let(:config_instance) { described_class.instance }
 
   before do
+    # Reset the singleton before each test
+    Singleton.__init__(described_class)
+
     # Stub Dir.home to return our temporary directory
     allow(Dir).to receive(:home).and_return(temp_home)
 
     # Set up constants in Committer::Config to use our temp paths
     stub_const('Committer::Config::CONFIG_DIR', config_dir)
     stub_const('Committer::Config::CONFIG_FILE', config_file)
+
+    # Mock git root detection
+    allow_any_instance_of(described_class).to receive(:`)
+      .with('git rev-parse --show-toplevel')
+      .and_return("#{git_root}\n")
   end
 
   after do
     FileUtils.remove_entry(temp_home) if File.directory?(temp_home)
+    FileUtils.remove_entry(git_root) if File.directory?(git_root)
   end
 
-  describe '.load' do
-    context 'when config file does not exist' do
-      it 'creates default config file' do
-        expect(File.exist?(config_file)).to be false
-        Committer::Config.load
-        expect(File.exist?(config_file)).to be true
-      end
-
-      it 'returns default config' do
-        config = Committer::Config.load
-        expect(config).to eq(Committer::Config::DEFAULT_CONFIG)
-      end
-    end
-
-    context 'when config file exists' do
-      before do
-        FileUtils.mkdir_p(config_dir)
-        File.write(config_file, { 'api_key' => 'test_key', 'model' => 'test_model', 'scopes' => ['test'] }.to_yaml)
-      end
-
-      it 'loads config from file' do
-        config = Committer::Config.load
-        expect(config['api_key']).to eq('test_key')
-        expect(config['model']).to eq('test_model')
-        expect(config['scopes']).to eq(['test'])
-      end
-    end
-
-    context 'when config file is invalid' do
-      before do
-        FileUtils.mkdir_p(config_dir)
-        File.write(config_file, 'invalid:yaml:[}')
-
-        # Make sure YAML.load_file raises an exception
-        allow(YAML).to receive(:load_file).and_raise(Psych::SyntaxError.new('file', 0, 0, 0, 'invalid syntax',
-                                                                            'problem'))
-      end
-
-      it 'returns default config' do
-        # Skip output test as it's challenging to mock properly across environments
-        # Focus on the functional behavior instead
-        result = Committer::Config.load
-        expect(result).to eq(Committer::Config::DEFAULT_CONFIG)
-      end
+  context 'when no config files exist' do
+    it 'raises not setup error' do
+      expect { config_instance }.to raise_error(Committer::ConfigErrors::NotSetup)
     end
   end
 
-  describe '.create_default_config' do
-    it 'creates config directory if it does not exist' do
-      expect(File.directory?(config_dir)).to be false
-      Committer::Config.create_default_config
-      expect(File.directory?(config_dir)).to be true
+  context 'when only home config file exists' do
+    before do
+      FileUtils.mkdir_p(config_dir)
+      File.write(config_file, { 'api_key' => 'home_key', 'model' => 'home_model', 'scopes' => ['home'] }.to_yaml)
     end
 
-    it 'writes default config to file' do
-      Committer::Config.create_default_config
+    it 'loads config from home file' do
+      expect(config_instance['api_key']).to eq('home_key')
+      expect(config_instance['model']).to eq('home_model')
+      expect(config_instance['scopes']).to eq(['home'])
+    end
+
+    it 'returns full config with to_h' do
+      expect(config_instance.to_h).to include({ 'api_key' => 'home_key', 'model' => 'home_model',
+                                                'scopes' => ['home'] })
+    end
+  end
+
+  context 'when only git root config file exists' do
+    before do
+      FileUtils.mkdir_p(git_config_dir)
+      File.write(git_config_file, { 'api_key' => 'git_key', 'model' => 'git_model', 'scopes' => ['git'] }.to_yaml)
+    end
+
+    it 'loads config from git root file' do
+      expect(config_instance['api_key']).to eq('git_key')
+      expect(config_instance['model']).to eq('git_model')
+      expect(config_instance['scopes']).to eq(['git'])
+    end
+  end
+
+  context 'when both config files exist' do
+    before do
+      FileUtils.mkdir_p(config_dir)
+      File.write(config_file, { 'api_key' => 'home_key', 'model' => 'home_model', 'scopes' => ['home'] }.to_yaml)
+
+      FileUtils.mkdir_p(git_config_dir)
+      File.write(git_config_file, { 'api_key' => 'git_key', 'model' => 'git_model' }.to_yaml)
+    end
+
+    it 'merges configs with git root taking precedence' do
+      expect(config_instance['api_key']).to eq('git_key')
+      expect(config_instance['model']).to eq('git_model')
+      expect(config_instance['scopes']).to eq(['home'])
+    end
+  end
+
+  context 'when config file is invalid' do
+    before do
+      FileUtils.mkdir_p(config_dir)
+      File.write(config_file, 'invalid:yaml:[}')
+
+      # Make sure YAML.load_file raises an exception for the home config
+      allow(YAML).to receive(:load_file).with(config_file).and_raise(
+        Psych::SyntaxError.new('file', 0, 0, 0, 'invalid syntax', 'problem')
+      )
+      # But allow normal behavior for other files
+      allow(YAML).to receive(:load_file).and_call_original
+    end
+
+    it 'continues execution and uses default config' do
+      expect { config_instance }.to raise_error(Committer::ConfigErrors::FormatError)
+    end
+  end
+
+  context 'when git root detection fails' do
+    before do
+      FileUtils.mkdir_p(config_dir)
+      File.write(config_file, { 'api_key' => 'home_key', 'model' => 'home_model' }.to_yaml)
+
+      allow_any_instance_of(described_class).to receive(:`)
+        .with('git rev-parse --show-toplevel')
+        .and_raise(StandardError.new('git error'))
+    end
+
+    it 'falls back to home config' do
+      expect(config_instance['api_key']).to eq('home_key')
+      expect(config_instance['model']).to eq('home_model')
+    end
+  end
+
+  context 'when git repository is not found' do
+    before do
+      FileUtils.mkdir_p(config_dir)
+      File.write(config_file, { 'api_key' => 'home_key', 'model' => 'home_model' }.to_yaml)
+
+      allow_any_instance_of(described_class).to receive(:`).with('git rev-parse --show-toplevel').and_return('')
+    end
+
+    it 'falls back to home config' do
+      expect(config_instance['api_key']).to eq('home_key')
+      expect(config_instance['model']).to eq('home_model')
+    end
+  end
+
+  describe '.setup' do
+    it 'calls create_default_config' do
+      Committer::Config.setup
+    end
+
+    it 'outputs setup instructions' do
+      expect { Committer::Config.setup }.to output(/Created config file/).to_stdout
+    end
+
+    it 'writes config file' do
+      expect(File.exist?(config_file)).to be false
+      Committer::Config.setup
       expect(File.exist?(config_file)).to be true
       config = YAML.load_file(config_file)
       expect(config).to eq(Committer::Config::DEFAULT_CONFIG)
     end
   end
 
-  describe '.setup' do
-    it 'calls create_default_config' do
-      expect(described_class).to receive(:create_default_config)
-      # Stub puts to avoid polluting test output
-      allow(described_class).to receive(:puts)
-      described_class.setup
+  describe 'memoization and reloading' do
+    before do
+      FileUtils.mkdir_p(config_dir)
+      File.write(config_file, { 'api_key' => 'initial_key' }.to_yaml)
+      # Force initialization
+      config_instance
     end
 
-    it 'outputs setup instructions' do
-      allow(described_class).to receive(:create_default_config)
-      expect { described_class.setup }.to output(/Created config file/).to_stdout
+    it 'memoizes config values' do
+      # Update the file but don't reload
+      File.write(config_file, { 'api_key' => 'updated_key' }.to_yaml)
+
+      # Should still have old value
+      expect(config_instance['api_key']).to eq('initial_key')
+    end
+
+    it 'reloads config when explicitly told to' do
+      # Update the file
+      File.write(config_file, { 'api_key' => 'reloaded_key' }.to_yaml)
+
+      # Reload and check
+      config_instance.reload
+      expect(config_instance['api_key']).to eq('reloaded_key')
     end
   end
 end

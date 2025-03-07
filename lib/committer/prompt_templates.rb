@@ -9,7 +9,7 @@ module Committer
     end
 
     def self.load_scopes
-      scopes = Committer::Config.load[:scopes] || []
+      scopes = Committer::Config.instance[:scopes] || []
       return 'DO NOT include a scope in your commit message' if scopes.empty?
 
       scope_list = "\nScopes:\n#{scopes.map { |s| "- #{s}" }.join("\n")}"

@@ -9,9 +9,15 @@ RSpec.describe Clients::ClaudeClient do
   let(:error_response) { { 'type' => 'error', 'error' => { 'type' => 'overloaded_error' } } }
 
   before do
-    allow(Committer::Config).to receive(:load).and_return(config)
+    # Create and stub the Config singleton instance
+    allow_any_instance_of(Committer::Config).to receive(:to_h).and_return(config)
+    allow_any_instance_of(Committer::Config).to receive(:[]) { |_, key| config[key] }
+
     # Stub WebMock to allow specific requests
     WebMock.disable_net_connect!
+
+    # Reset the singleton before each test
+    Singleton.__init__(Committer::Config)
   end
 
   describe '#initialize' do

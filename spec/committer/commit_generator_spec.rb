@@ -18,7 +18,9 @@ RSpec.describe Committer::CommitGenerator do
   describe '#build_commit_prompt' do
     context 'when no scopes are configured' do
       before do
-        allow(Committer::Config).to receive(:load).and_return({})
+        config_instance = instance_double(Committer::Config)
+        allow(config_instance).to receive(:[]).with('scopes').and_return(nil)
+        allow(Committer::Config).to receive(:instance).and_return(config_instance)
       end
 
       it 'builds prompt with no scopes' do
@@ -33,7 +35,9 @@ RSpec.describe Committer::CommitGenerator do
       let(:scopes) { %w[api ui docs] }
 
       before do
-        allow(Committer::Config).to receive(:load).and_return(scopes: scopes)
+        config_instance = instance_double(Committer::Config)
+        allow(config_instance).to receive(:[]).with('scopes').and_return(scopes)
+        allow(Committer::Config).to receive(:instance).and_return(config_instance)
       end
 
       it 'builds prompt with scopes' do
@@ -52,7 +56,9 @@ RSpec.describe Committer::CommitGenerator do
       let(:generator) { described_class.new(diff, commit_context) }
 
       before do
-        allow(Committer::Config).to receive(:load).and_return({})
+        config_instance = instance_double(Committer::Config)
+        allow(config_instance).to receive(:[]).with('scopes').and_return(nil)
+        allow(Committer::Config).to receive(:instance).and_return(config_instance)
       end
 
       it 'uses the template with body' do
