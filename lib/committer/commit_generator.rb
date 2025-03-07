@@ -17,7 +17,7 @@ module Committer
     end
 
     def build_commit_prompt
-      scopes = Committer::Config.load
+      scopes = Committer::Config.load[:scopes] || []
       scope_section = scopes.empty? ? '' : "\nScopes:\n#{scopes.map { |s| "- #{s}" }.join("\n")}"
       scope_instruction = if scopes.empty?
                             '- DO NOT include a scope in your commit message'
