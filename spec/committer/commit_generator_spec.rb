@@ -125,9 +125,7 @@ RSpec.describe Committer::CommitGenerator do
       end
 
       it 'outputs message and exits' do
-        expect(described_class).to receive(:puts).with('No changes are staged for commit.')
-        expect(described_class).to receive(:exit).with(0)
-        described_class.check_git_status
+        expect(described_class.check_git_status).to eq('')
       end
     end
   end

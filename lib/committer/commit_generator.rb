@@ -48,11 +48,6 @@ module Committer
         exit 1
       end
 
-      if stdout.empty?
-        puts 'No changes are staged for commit.'
-        exit 0
-      end
-
       stdout
     end
 
