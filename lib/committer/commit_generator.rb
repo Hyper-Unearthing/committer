@@ -17,25 +17,16 @@ module Committer
     end
 
     def build_commit_prompt
-      scopes = Committer::Config.load[:scopes] || []
-      scope_section = scopes.empty? ? '' : "\nScopes:\n#{scopes.map { |s| "- #{s}" }.join("\n")}"
-      scope_instruction = if scopes.empty?
-                            '- DO NOT include a scope in your commit message'
-                          else
-                            '- Choose an appropriate scope from the list above if relevant to the change'
-                          end
       format(template,
              diff: @diff,
-             scopes_section: scope_section,
-             scope_instruction: scope_instruction,
              commit_context: @commit_context)
     end
 
     def template
       if @commit_context.nil? || @commit_context.empty?
-        Committer::PromptTemplates::SUMMARY_ONLY
+        Committer::PromptTemplates.build_prompt_summary_only
       else
-        Committer::PromptTemplates::SUMMARY_AND_BODY
+        Committer::PromptTemplates.build_prompt_summary_and_body
       end
     end
 
