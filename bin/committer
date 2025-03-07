@@ -4,64 +4,10 @@
 require 'bundler/setup'
 require_relative '../lib/committer/config'
 require_relative '../lib/committer/commit_generator'
+require_relative '../lib/committer/commands'
 
 # Handle command line arguments
 command = ARGV[0]
+args = ARGV[1..]
 
-case command
-when 'setup'
-  Committer::Config.setup
-  exit 0
-
-when 'help', '--help', '-h'
-  puts 'Committer - AI-powered git commit message generator'
-  puts
-  puts 'Commands:'
-  puts '  committer setup  - Create the config file template at ~/.committer/config.yml'
-  puts '  committer        - Generate commit message for staged changes'
-  puts
-  exit 0
-when 'output-message'
-  commit_context = ARGV[1]
-  diff = Committer::CommitGenerator.check_git_status
-
-  commit_generator = Committer::CommitGenerator.new(diff, commit_context)
-  commit_message = commit_generator.prepare_commit_message
-
-  summary = commit_message[:summary]
-  body = commit_message[:body]
-
-  puts <<~OUTPUT
-    #{summary}
-
-    #{body}
-  OUTPUT
-  exit 0
-end
-
-# Default behavior: generate commit message
-def execute_git_diff_staged
-  diff = Committer::CommitGenerator.check_git_status
-
-  # Prompt user for commit context
-  puts 'Why are you making this change? (Press Enter to skip)'
-  commit_context = gets.chomp
-  commit_generator = Committer::CommitGenerator.new(diff, commit_context)
-  commit_message = commit_generator.prepare_commit_message
-
-  summary = commit_message[:summary]
-  body = commit_message[:body]
-
-  # Create git commit with the suggested message and open in editor
-  if body
-    system('git', 'commit', '-m', summary, '-m', body, '-e')
-  else
-    system('git', 'commit', '-m', summary, '-e')
-  end
-rescue Clients::ClaudeClient::ConfigError, StandardError => e
-  puts "Error: #{e.message}"
-  exit 1
-end
-
-# Execute the function if no specific command was given
-execute_git_diff_staged
+Committer::Commands.run(command, args)
