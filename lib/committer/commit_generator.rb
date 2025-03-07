@@ -77,7 +77,6 @@ module Committer
 
     def prepare_commit_message
       client = Clients::ClaudeClient.new
-      puts 'Sending diff to Claude...'
 
       prompt = build_commit_prompt
       response = client.post(prompt)

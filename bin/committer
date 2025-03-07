@@ -21,6 +21,22 @@ when 'help', '--help', '-h'
   puts '  committer        - Generate commit message for staged changes'
   puts
   exit 0
+when 'output-message'
+  commit_context = ARGV[1]
+  diff = Committer::CommitGenerator.check_git_status
+
+  commit_generator = Committer::CommitGenerator.new(diff, commit_context)
+  commit_message = commit_generator.prepare_commit_message
+
+  summary = commit_message[:summary]
+  body = commit_message[:body]
+
+  puts <<~OUTPUT
+    #{summary}
+
+    #{body}
+  OUTPUT
+  exit 0
 end
 
 # Default behavior: generate commit message
