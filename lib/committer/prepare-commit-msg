@@ -1,0 +1,35 @@
+#!/bin/bash
+
+# Check if parameters 2 and 3 are null
+if [ -z "$2" ] && [ -z "$3" ]; then
+    # Check if parameter 1 is provided and is a valid file
+    if [ -z "$1" ]; then
+        echo "Error: No target file specified in parameter 1"
+        exit 1
+    fi
+    
+    if [ ! -f "$1" ]; then
+        echo "Error: File '$1' does not exist"
+        exit 1
+    fi
+    
+    # Check if committer command exists
+    if command -v committer &> /dev/null; then
+        # Execute committer command and capture its output
+        COMMITTER_OUTPUT=$(committer output-message "$REASON")
+        
+        # Create a temporary file with the committer output at the top
+        # followed by the original content of the file
+        {
+            echo "$COMMITTER_OUTPUT"
+            cat "$1"
+        } > "$1.tmp"
+        
+        # Replace the original file with the temporary file
+        mv "$1.tmp" "$1"
+        
+        echo "Successfully added committer output to the top of $1"
+    else
+        echo "Committer command not found - no action taken"
+    fi
+fi

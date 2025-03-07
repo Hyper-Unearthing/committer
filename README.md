@@ -80,6 +80,41 @@ This will:
 - `committer` - Generate commit message for staged changes
 - `committer setup` - Create the config file template
 - `committer help` - Display help information
+- `committer setup-git-hook` - Install the git hook for automatic commit message generation
+- `committer output-message` - Generate a commit message (used by the git hook)
+
+## Git Hook Integration
+
+Committer can be integrated directly with Git using a prepare-commit-msg hook, which automatically generates commit messages whenever you commit.
+
+### Installing the Git Hook
+
+To install the git hook, navigate to the root of your git repository and run:
+
+```bash
+committer setup-git-hook
+```
+
+This command will:
+1. Verify you're in the root of a git repository
+2. Install the prepare-commit-msg hook in your `.git/hooks` directory
+3. Make the hook executable
+
+### How the Git Hook Works
+
+Once installed, the git hook will:
+1. Automatically run whenever you execute `git commit`
+2. Generate an AI-powered commit message based on your staged changes
+3. Pre-fill your commit message editor with the generated message
+4. Allow you to edit the message before finalizing the commit
+
+Since git hooks run in non-interactive mode, you can provide context for your commit by using the REASON environment variable:
+
+```bash
+REASON="Improve performance by optimizing database queries" git commit
+```
+
+If you don't provide a REASON, the commit message will still be generated, but without the additional context that would be used to generate a more detailed body.
 
 ## Development
 
