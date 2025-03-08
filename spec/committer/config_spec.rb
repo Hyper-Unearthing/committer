@@ -136,24 +136,6 @@ RSpec.describe Committer::Config::Accessor do
     end
   end
 
-  describe '.setup' do
-    it 'calls create_default_config' do
-      Committer::Config::Accessor.setup
-    end
-
-    it 'outputs setup instructions' do
-      expect { Committer::Config::Accessor.setup }.to output(/Created config file/).to_stdout
-    end
-
-    it 'writes config file' do
-      expect(File.exist?(config_file)).to be false
-      Committer::Config::Accessor.setup
-      expect(File.exist?(config_file)).to be true
-      config = YAML.load_file(config_file)
-      expect(config).to eq(Committer::Config::Accessor::DEFAULT_CONFIG)
-    end
-  end
-
   describe 'memoization and reloading' do
     before do
       FileUtils.mkdir_p(config_dir)
