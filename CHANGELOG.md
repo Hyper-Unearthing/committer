@@ -3,8 +3,10 @@ Changelog
 
 Auto-generated from git commits.
 
-HEAD   (2025-03-08 18:18:20 +0800)
-
+HEAD   (2025-03-08 18:40:07 +0800)
+  * bump version [0876d7f]
+  * refactor: replace HTTParty with standard Ruby Net::HTTP [078cb0c]
+  * update change log [9448513]
 
 v0.4.0   (2025-03-08 18:18:20 +0800)
   * bump version [30fa939]
