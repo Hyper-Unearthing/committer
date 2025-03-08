@@ -2,10 +2,8 @@
 
 module Committer
   module PromptTemplates
-    FORMATTING_RULES_PATH = File.join(File.dirname(__FILE__), 'formatting_rules.txt')
-
     def self.load_formatting_rules
-      File.read(FORMATTING_RULES_PATH)
+      Committer::Config::Accessor.instance.load_formatting_rules
     end
 
     def self.load_scopes
