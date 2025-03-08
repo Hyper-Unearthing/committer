@@ -3,7 +3,15 @@ Changelog
 
 Auto-generated from git commits.
 
-HEAD   (2025-03-08 18:40:07 +0800)
+HEAD   (2025-03-08 18:46:43 +0800)
+
+
+v0.4.2   (2025-03-08 18:46:43 +0800)
+  * bump version [5d4f365]
+  * refactor: remove unused HTTParty dependency [826b7b9]
+
+v0.4.1   (2025-03-08 18:40:41 +0800)
+  * update changelog [8eb97a7]
   * bump version [0876d7f]
   * refactor: replace HTTParty with standard Ruby Net::HTTP [078cb0c]
   * update change log [9448513]
