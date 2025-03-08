@@ -45,6 +45,35 @@ module Committer
         result
       end
 
+      def load_file_from_path(path)
+        return '' unless File.exist?(path)
+
+        File.read(path)
+      end
+
+      def load_formatting_rules
+        git_root = Committer::GitHelper.repo_root
+        unless git_root.empty?
+          formatting_rules_git_path = File.join(git_root, '.committer',
+                                                Committer::Config::Constants::FORMATTING_RULES_FILE_NAME)
+        end
+
+        git_path_contents = load_file_from_path(formatting_rules_git_path) if formatting_rules_git_path
+
+        return git_path_contents unless git_path_contents.empty?
+
+        home_path = File.join(Committer::Config::Constants::CONFIG_DIR,
+                              Committer::Config::Constants::FORMATTING_RULES_FILE_NAME)
+
+        home_path_contents = load_file_from_path(home_path)
+
+        return home_path_contents unless home_path_contents.empty?
+
+        default_path = File.join(Committer::Config::Constants::DEFAULT_PROMPT_PATH,
+                                 Committer::Config::Constants::FORMATTING_RULES_FILE_NAME)
+        load_file_from_path(default_path)
+      end
+
       def load_config_from_git_root
         git_root = Committer::GitHelper.repo_root
         return {} if git_root.empty?

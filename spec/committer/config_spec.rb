@@ -8,9 +8,11 @@ RSpec.describe Committer::Config::Accessor do
   let(:temp_home) { Dir.mktmpdir }
   let(:config_dir) { File.join(temp_home, '.committer') }
   let(:config_file) { File.join(config_dir, 'config.yml') }
+  let(:home_formatting_rules) { File.join(config_dir, 'formatting_rules.txt') }
   let(:git_root) { Dir.mktmpdir }
   let(:git_config_dir) { File.join(git_root, '.committer') }
   let(:git_config_file) { File.join(git_config_dir, 'config.yml') }
+  let(:git_formatting_rules) { File.join(git_config_dir, 'formatting_rules.txt') }
   let(:config_instance) { described_class.instance }
 
   before do
@@ -31,6 +33,43 @@ RSpec.describe Committer::Config::Accessor do
   after do
     FileUtils.remove_entry(temp_home) if File.directory?(temp_home)
     FileUtils.remove_entry(git_root) if File.directory?(git_root)
+  end
+
+  describe 'custom formatting rules' do
+    before do
+      FileUtils.mkdir_p(config_dir)
+      File.write(config_file, { 'api_key' => 'home_key', 'model' => 'home_model', 'scopes' => ['home'] }.to_yaml)
+    end
+
+    context 'when formatting rules exist in home root' do
+      before do
+        FileUtils.mkdir_p(config_dir)
+        File.write(home_formatting_rules, '# Custom formatting rules defined in home')
+      end
+
+      it 'loads custom formatting rules' do
+        formatting_rules = config_instance.load_formatting_rules
+        expect(formatting_rules).to include('# Custom formatting rules defined in home')
+      end
+
+      context 'when formatting rules exist in git root' do
+        before do
+          FileUtils.mkdir_p(git_config_dir)
+          File.write(git_formatting_rules, '# Custom formatting rules defined in git')
+        end
+
+        it 'loads custom formatting rules from git root instead of home' do
+          formatting_rules = config_instance.load_formatting_rules
+          expect(formatting_rules).to include('# Custom formatting rules defined in git')
+        end
+      end
+    end
+    context 'when no custom files exist' do
+      it 'loads default formatting rules' do
+        formatting_rules = config_instance.load_formatting_rules
+        expect(formatting_rules).to include('# Formatting rules for message')
+      end
+    end
   end
 
   context 'when no config files exist' do
