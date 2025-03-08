@@ -3,7 +3,7 @@
 require 'open3'
 require 'httparty'
 require 'yaml'
-require_relative 'config'
+require_relative 'config/accessor'
 require_relative 'prompt_templates'
 require_relative '../clients/claude_client'
 

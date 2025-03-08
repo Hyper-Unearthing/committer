@@ -10,15 +10,15 @@ RSpec.describe Clients::ClaudeClient do
 
   before do
     # Create and stub the Config singleton instance
-    allow_any_instance_of(Committer::Config).to receive(:load_config).and_return(config)
-    allow_any_instance_of(Committer::Config).to receive(:to_h).and_return(config)
-    allow_any_instance_of(Committer::Config).to receive(:[]) { |_, key| config[key] }
+    allow_any_instance_of(Committer::Config::Accessor).to receive(:load_config).and_return(config)
+    allow_any_instance_of(Committer::Config::Accessor).to receive(:to_h).and_return(config)
+    allow_any_instance_of(Committer::Config::Accessor).to receive(:[]) { |_, key| config[key] }
 
     # Stub WebMock to allow specific requests
     WebMock.disable_net_connect!
 
     # Reset the singleton before each test
-    Singleton.__init__(Committer::Config)
+    Singleton.__init__(Committer::Config::Accessor)
   end
 
   describe '#initialize' do

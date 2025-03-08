@@ -4,7 +4,7 @@ module Committer
   module Commands
     class Setup
       def self.execute(_args)
-        Committer::Config.setup
+        Committer::Config::Accessor.setup
         exit 0
       end
     end

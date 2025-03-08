@@ -15,12 +15,12 @@ RSpec.describe Committer::CommitGenerator do
   let(:config_file) { File.join(config_dir, 'config.yml') }
 
   before do
-    stub_const('Committer::Config::CONFIG_DIR', config_dir)
-    stub_const('Committer::Config::CONFIG_FILE', config_file)
+    stub_const('Committer::Config::Accessor::CONFIG_DIR', config_dir)
+    stub_const('Committer::Config::Accessor::CONFIG_FILE', config_file)
     allow(Dir).to receive(:home).and_return(temp_home)
     FileUtils.mkdir_p(config_dir)
     File.write(config_file, { api_key: 'dummyKey', scopes: [] }.to_yaml)
-    Committer::Config.instance.reload
+    Committer::Config::Accessor.instance.reload
   end
 
   after do
@@ -43,7 +43,7 @@ RSpec.describe Committer::CommitGenerator do
       before do
         FileUtils.mkdir_p(config_dir)
         File.write(config_file, { api_key: 'dummyKey', scopes: %w[api ui docs] }.to_yaml)
-        Committer::Config.instance.reload
+        Committer::Config::Accessor.instance.reload
       end
 
       it 'builds prompt with scopes' do

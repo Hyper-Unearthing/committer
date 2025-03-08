@@ -2,7 +2,7 @@
 # frozen_string_literal: true
 
 require 'bundler/setup'
-require_relative '../lib/committer/config'
+require_relative '../lib/committer/config/accessor'
 require_relative '../lib/committer/commit_generator'
 require_relative '../lib/committer/commands'
 

@@ -4,7 +4,7 @@ require 'spec_helper'
 require 'fileutils'
 require 'tempfile'
 
-RSpec.describe Committer::Config do
+RSpec.describe Committer::Config::Accessor do
   let(:temp_home) { Dir.mktmpdir }
   let(:config_dir) { File.join(temp_home, '.committer') }
   let(:config_file) { File.join(config_dir, 'config.yml') }
@@ -21,8 +21,8 @@ RSpec.describe Committer::Config do
     allow(Dir).to receive(:home).and_return(temp_home)
 
     # Set up constants in Committer::Config to use our temp paths
-    stub_const('Committer::Config::CONFIG_DIR', config_dir)
-    stub_const('Committer::Config::CONFIG_FILE', config_file)
+    stub_const('Committer::Config::Accessor::CONFIG_DIR', config_dir)
+    stub_const('Committer::Config::Accessor::CONFIG_FILE', config_file)
 
     # Mock git root detection
     allow_any_instance_of(described_class).to receive(:`)
@@ -138,19 +138,19 @@ RSpec.describe Committer::Config do
 
   describe '.setup' do
     it 'calls create_default_config' do
-      Committer::Config.setup
+      Committer::Config::Accessor.setup
     end
 
     it 'outputs setup instructions' do
-      expect { Committer::Config.setup }.to output(/Created config file/).to_stdout
+      expect { Committer::Config::Accessor.setup }.to output(/Created config file/).to_stdout
     end
 
     it 'writes config file' do
       expect(File.exist?(config_file)).to be false
-      Committer::Config.setup
+      Committer::Config::Accessor.setup
       expect(File.exist?(config_file)).to be true
       config = YAML.load_file(config_file)
-      expect(config).to eq(Committer::Config::DEFAULT_CONFIG)
+      expect(config).to eq(Committer::Config::Accessor::DEFAULT_CONFIG)
     end
   end
 
