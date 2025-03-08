@@ -26,6 +26,7 @@ RSpec.describe Committer::Config::Writer do
 
   describe '#setup' do
     it 'calls create_default_config' do
+      FileUtils.remove_entry(temp_home) if File.directory?(temp_home)
       expect(writer).to receive(:create_default_config).and_call_original
       writer.setup
     end

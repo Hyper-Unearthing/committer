@@ -8,7 +8,6 @@ require_relative 'constants'
 module Committer
   module Config
     class Writer
-
       attr_reader :config_dir
 
       def initialize(config_dir)
@@ -21,6 +20,23 @@ module Committer
 
       def setup
         create_default_config
+      end
+
+      def write_config_file(file_path, contents)
+        FileUtils.mkdir_p(@config_dir)
+        if File.exist?(file_path)
+          puts "Config file already exists at #{config_file}, skipping write"
+          false
+        else
+          File.write(file_path, contents)
+          true
+        end
+      end
+
+      def create_default_config
+        wrote_file = write_config_file(config_file, Committer::Config::Constants::DEFAULT_CONFIG.to_yaml)
+        return unless wrote_file
+
         puts 'Created config file at:'
         puts config_file
         puts "\nPlease edit this file to add your Anthropic API key."
@@ -32,15 +48,6 @@ module Committer
         puts '  - feature'
         puts '  - api'
         puts '  - ui'
-      end
-
-      def create_default_config
-        FileUtils.mkdir_p(@config_dir)
-        if File.exist?(config_file)
-          puts "Config file already exists at #{config_file}, skipping write"
-        else
-          File.write(config_file, Committer::Config::Constants::DEFAULT_CONFIG.to_yaml)
-        end
       end
     end
   end
