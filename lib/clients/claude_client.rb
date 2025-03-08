@@ -1,7 +1,8 @@
 # frozen_string_literal: true
 
 require 'json'
-require 'httparty'
+require 'net/http'
+require 'uri'
 require_relative '../committer/config/accessor'
 
 module Clients
@@ -10,6 +11,8 @@ module Clients
     class OverloadError < StandardError; end
     class UnknownError < StandardError; end
     class ConfigError < StandardError; end
+
+    API_ENDPOINT = 'https://api.anthropic.com/v1/messages'
 
     def initialize
       @config = Committer::Config::Accessor.instance
@@ -38,19 +41,20 @@ module Clients
     private
 
     def send_request(body)
-      options = build_request_options(body)
-      HTTParty.post('https://api.anthropic.com/v1/messages', options)
-    end
+      uri = URI.parse(API_ENDPOINT)
+      http = Net::HTTP.new(uri.host, uri.port)
+      http.use_ssl = true
 
-    def build_request_options(body)
-      {
-        headers: {
-          'anthropic-version': '2023-06-01',
-          'content-type': 'application/json',
-          'x-api-key': @config['api_key']
-        },
-        body: body.to_json
-      }
+      request = Net::HTTP::Post.new(uri.request_uri)
+      request['anthropic-version'] = '2023-06-01'
+      request['content-type'] = 'application/json'
+      request['x-api-key'] = @config['api_key']
+      request.body = body.to_json
+
+      response = http.request(request)
+      JSON.parse(response.body)
+    rescue JSON::ParserError
+      { 'type' => 'error', 'error' => { 'type' => 'unknown_error' } }
     end
 
     def handle_error_response(response)
