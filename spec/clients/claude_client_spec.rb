@@ -10,6 +10,7 @@ RSpec.describe Clients::ClaudeClient do
 
   before do
     # Create and stub the Config singleton instance
+    allow_any_instance_of(Committer::Config).to receive(:load_config).and_return(config)
     allow_any_instance_of(Committer::Config).to receive(:to_h).and_return(config)
     allow_any_instance_of(Committer::Config).to receive(:[]) { |_, key| config[key] }
 
