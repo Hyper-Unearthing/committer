@@ -19,6 +19,5 @@ Gem::Specification.new do |spec|
   spec.executables = %w[committer]
   spec.require_paths = ['lib']
 
-  spec.add_dependency 'httparty', '~> 0.20'
   spec.metadata['rubygems_mfa_required'] = 'true'
 end
