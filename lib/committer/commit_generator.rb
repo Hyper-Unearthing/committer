@@ -1,6 +1,5 @@
 # frozen_string_literal: true
 
-require 'httparty'
 require 'yaml'
 require_relative 'config/accessor'
 require_relative 'prompt_templates'
