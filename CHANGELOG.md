@@ -3,7 +3,24 @@ Changelog
 
 Auto-generated from git commits.
 
-HEAD   (2025-03-07 22:59:48 +0800)
+HEAD   (2025-03-08 18:18:20 +0800)
+
+
+v0.4.0   (2025-03-08 18:18:20 +0800)
+  * bump version [30fa939]
+  * feat: add sample formatting rules file creation during setup [92b0e2b]
+  * feat: add custom formatting rules loader for commit messages [20ac7ea]
+  * fix: correct config file writing and improve message display [2409844]
+  * refactor: extract Git operations to dedicated GitHelper class [f01afea]
+  * refactor: extract config constants into separate module [5c368e5]
+  * fix: prevent overwriting existing config file [8bda82a]
+  * refactor: extract config writer to separate class [c709afb]
+  * refactor: restructure configuration into a module with accessor class 
+    [6e7d2f0]
+  * fix: add missing stub for config loading in claude client specs [a931a00]
+  * docs: add CHANGELOG.md and script for automatic generation [ba5aae1]
+  * test: refactor specs to use more realistic test configurations [206b1ff]
+  * refactor: convert Config to singleton with git repository support [51714f0]
   * refactor: restructure prompt generation system for better configurability 
     [566ba2e]
   * test: update commit prompt tests for consistency [a0ab163]
