@@ -65,13 +65,12 @@ RSpec.describe Committer::Commands::Default do
     before do
       allow(Committer::CommitGenerator).to receive(:new).with(diff, commit_context).and_return(commit_generator)
       allow(commit_generator).to receive(:prepare_commit_message).and_return(commit_message)
-      allow(described_class).to receive(:system)
+      allow(Committer::GitHelper).to receive(:commit)
     end
 
     context 'when commit includes a body' do
       it 'creates a commit with summary and body' do
-        expect(described_class).to receive(:system).with('git', 'commit', '-m', commit_message[:summary], '-m',
-                                                         commit_message[:body], '-e')
+        expect(Committer::GitHelper).to receive(:commit).with(commit_message[:summary], commit_message[:body])
 
         described_class.execute_commit(diff, commit_context)
       end
@@ -81,7 +80,7 @@ RSpec.describe Committer::Commands::Default do
       let(:commit_message) { { summary: 'feat: add new feature', body: nil } }
 
       it 'creates a commit with only the summary' do
-        expect(described_class).to receive(:system).with('git', 'commit', '-m', commit_message[:summary], '-e')
+        expect(Committer::GitHelper).to receive(:commit).with(commit_message[:summary], nil)
 
         described_class.execute_commit(diff, commit_context)
       end

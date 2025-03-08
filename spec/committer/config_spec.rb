@@ -4,13 +4,15 @@ require 'spec_helper'
 require 'fileutils'
 require 'tempfile'
 
-RSpec.describe Committer::Config do
+RSpec.describe Committer::Config::Accessor do
   let(:temp_home) { Dir.mktmpdir }
   let(:config_dir) { File.join(temp_home, '.committer') }
   let(:config_file) { File.join(config_dir, 'config.yml') }
+  let(:home_formatting_rules) { File.join(config_dir, 'formatting_rules.txt') }
   let(:git_root) { Dir.mktmpdir }
   let(:git_config_dir) { File.join(git_root, '.committer') }
   let(:git_config_file) { File.join(git_config_dir, 'config.yml') }
+  let(:git_formatting_rules) { File.join(git_config_dir, 'formatting_rules.txt') }
   let(:config_instance) { described_class.instance }
 
   before do
@@ -20,19 +22,54 @@ RSpec.describe Committer::Config do
     # Stub Dir.home to return our temporary directory
     allow(Dir).to receive(:home).and_return(temp_home)
 
-    # Set up constants in Committer::Config to use our temp paths
-    stub_const('Committer::Config::CONFIG_DIR', config_dir)
-    stub_const('Committer::Config::CONFIG_FILE', config_file)
+    # Set up constants in Committer::Config::Constants to use our temp paths
+    stub_const('Committer::Config::Constants::CONFIG_DIR', config_dir)
+    stub_const('Committer::Config::Constants::CONFIG_FILE', config_file)
 
     # Mock git root detection
-    allow_any_instance_of(described_class).to receive(:`)
-      .with('git rev-parse --show-toplevel')
-      .and_return("#{git_root}\n")
+    allow(Committer::GitHelper).to receive(:repo_root).and_return(git_root)
   end
 
   after do
     FileUtils.remove_entry(temp_home) if File.directory?(temp_home)
     FileUtils.remove_entry(git_root) if File.directory?(git_root)
+  end
+
+  describe 'custom formatting rules' do
+    before do
+      FileUtils.mkdir_p(config_dir)
+      File.write(config_file, { 'api_key' => 'home_key', 'model' => 'home_model', 'scopes' => ['home'] }.to_yaml)
+    end
+
+    context 'when formatting rules exist in home root' do
+      before do
+        FileUtils.mkdir_p(config_dir)
+        File.write(home_formatting_rules, '# Custom formatting rules defined in home')
+      end
+
+      it 'loads custom formatting rules' do
+        formatting_rules = config_instance.load_formatting_rules
+        expect(formatting_rules).to include('# Custom formatting rules defined in home')
+      end
+
+      context 'when formatting rules exist in git root' do
+        before do
+          FileUtils.mkdir_p(git_config_dir)
+          File.write(git_formatting_rules, '# Custom formatting rules defined in git')
+        end
+
+        it 'loads custom formatting rules from git root instead of home' do
+          formatting_rules = config_instance.load_formatting_rules
+          expect(formatting_rules).to include('# Custom formatting rules defined in git')
+        end
+      end
+    end
+    context 'when no custom files exist' do
+      it 'loads default formatting rules' do
+        formatting_rules = config_instance.load_formatting_rules
+        expect(formatting_rules).to include('# Formatting rules for message')
+      end
+    end
   end
 
   context 'when no config files exist' do
@@ -111,7 +148,7 @@ RSpec.describe Committer::Config do
       FileUtils.mkdir_p(config_dir)
       File.write(config_file, { 'api_key' => 'home_key', 'model' => 'home_model' }.to_yaml)
 
-      allow_any_instance_of(described_class).to receive(:`)
+      allow(Committer::GitHelper).to receive(:`)
         .with('git rev-parse --show-toplevel')
         .and_raise(StandardError.new('git error'))
     end
@@ -133,24 +170,6 @@ RSpec.describe Committer::Config do
     it 'falls back to home config' do
       expect(config_instance['api_key']).to eq('home_key')
       expect(config_instance['model']).to eq('home_model')
-    end
-  end
-
-  describe '.setup' do
-    it 'calls create_default_config' do
-      Committer::Config.setup
-    end
-
-    it 'outputs setup instructions' do
-      expect { Committer::Config.setup }.to output(/Created config file/).to_stdout
-    end
-
-    it 'writes config file' do
-      expect(File.exist?(config_file)).to be false
-      Committer::Config.setup
-      expect(File.exist?(config_file)).to be true
-      config = YAML.load_file(config_file)
-      expect(config).to eq(Committer::Config::DEFAULT_CONFIG)
     end
   end
 

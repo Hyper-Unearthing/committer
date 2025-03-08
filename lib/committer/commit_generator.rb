@@ -1,11 +1,11 @@
 # frozen_string_literal: true
 
-require 'open3'
 require 'httparty'
 require 'yaml'
-require_relative 'config'
+require_relative 'config/accessor'
 require_relative 'prompt_templates'
 require_relative '../clients/claude_client'
+require_relative 'git_helper'
 
 module Committer
   class CommitGenerator
@@ -31,15 +31,10 @@ module Committer
     end
 
     def self.check_git_status
-      stdout, stderr, status = Open3.capture3('git diff --staged')
-
-      unless status.success?
-        puts 'Error executing git diff --staged:'
-        puts stderr
-        exit 1
-      end
-
-      stdout
+      Committer::GitHelper.staged_diff
+    rescue Committer::Error => e
+      puts e.message
+      exit 1
     end
 
     def parse_response(response)

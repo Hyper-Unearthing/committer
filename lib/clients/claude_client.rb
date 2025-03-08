@@ -2,7 +2,7 @@
 
 require 'json'
 require 'httparty'
-require_relative '../committer/config'
+require_relative '../committer/config/accessor'
 
 module Clients
   # Claude API client for communicating with Anthropic's Claude model
@@ -12,7 +12,7 @@ module Clients
     class ConfigError < StandardError; end
 
     def initialize
-      @config = Committer::Config.instance
+      @config = Committer::Config::Accessor.instance
 
       return unless @config['api_key'].nil? || @config['api_key'].empty?
 

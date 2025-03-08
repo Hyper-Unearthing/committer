@@ -8,7 +8,7 @@ require 'pry'
 $LOAD_PATH.unshift File.expand_path('../lib', __dir__)
 
 # Require the necessary files
-require 'committer/config'
+require 'committer/config/accessor'
 require 'committer/prompt_templates'
 require 'committer/commit_generator'
 require 'clients/claude_client'
