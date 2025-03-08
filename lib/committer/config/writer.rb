@@ -29,7 +29,11 @@ module Committer
 
       def self.create_default_config
         FileUtils.mkdir_p(CONFIG_DIR)
-        File.write(CONFIG_FILE, DEFAULT_CONFIG.to_yaml)
+        if File.exist?(CONFIG_FILE)
+          puts "Config file already exists at #{CONFIG_FILE}, skipping write"
+        else
+          File.write(CONFIG_FILE, DEFAULT_CONFIG.to_yaml)
+        end
       end
     end
   end

@@ -43,4 +43,32 @@ RSpec.describe Committer::Config::Writer do
       expect(config).to eq(Committer::Config::Accessor::DEFAULT_CONFIG)
     end
   end
+
+  describe '.create_default_config' do
+    it 'creates the config directory' do
+      expect(Dir.exist?(config_dir)).to be false
+      described_class.create_default_config
+      expect(Dir.exist?(config_dir)).to be true
+    end
+
+    it 'writes the config file if it does not exist' do
+      expect(File.exist?(config_file)).to be false
+      described_class.create_default_config
+      expect(File.exist?(config_file)).to be true
+    end
+
+    it 'skips writing if the config file already exists' do
+      # First create the file with test content
+      FileUtils.mkdir_p(config_dir)
+      test_content = { test: 'existing_content' }
+      File.write(config_file, test_content.to_yaml)
+
+      # Then try to create the default config
+      expect { described_class.create_default_config }.to output(/skipping write/).to_stdout
+
+      # Verify the file wasn't overwritten by checking it still contains our test value
+      config = YAML.load_file(config_file)
+      expect(config[:test]).to eq('existing_content')
+    end
+  end
 end
