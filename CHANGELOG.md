@@ -3,8 +3,13 @@ Changelog
 
 Auto-generated from git commits.
 
-HEAD   (2025-03-08 18:46:43 +0800)
+HEAD   (2025-03-08 19:02:32 +0800)
 
+
+v0.5.0   (2025-03-08 19:02:32 +0800)
+  * bump version [3602f4c]
+  * Replace formatting rules file loading with config accessor [e8d41e8]
+  * update changelog [a670730]
 
 v0.4.2   (2025-03-08 18:46:43 +0800)
   * bump version [5d4f365]
