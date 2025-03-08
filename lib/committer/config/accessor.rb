@@ -3,20 +3,13 @@
 require 'yaml'
 require 'singleton'
 require_relative '../committer_errors'
+require_relative 'constants'
 
 module Committer
   # Configuration management for the Committer gem
   module Config
     class Accessor
       include Singleton
-
-      CONFIG_DIR = File.join(Dir.home, '.committer')
-      CONFIG_FILE = File.join(CONFIG_DIR, 'config.yml')
-      DEFAULT_CONFIG = {
-        'api_key' => nil,
-        'model' => 'claude-3-7-sonnet-20250219',
-        'scopes' => nil
-      }.freeze
 
       def initialize
         @config = load_config
@@ -34,7 +27,7 @@ module Committer
 
       def load_config
         # Load configs from both locations and merge them
-        home_config = load_config_from_path(CONFIG_FILE)
+        home_config = load_config_from_path(Committer::Config::Constants::CONFIG_FILE)
         git_root_config = load_config_from_git_root
         raise Committer::ConfigErrors::NotSetup if home_config.empty? && git_root_config.empty?
 

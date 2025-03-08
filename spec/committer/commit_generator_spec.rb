@@ -15,8 +15,8 @@ RSpec.describe Committer::CommitGenerator do
   let(:config_file) { File.join(config_dir, 'config.yml') }
 
   before do
-    stub_const('Committer::Config::Accessor::CONFIG_DIR', config_dir)
-    stub_const('Committer::Config::Accessor::CONFIG_FILE', config_file)
+    stub_const('Committer::Config::Constants::CONFIG_DIR', config_dir)
+    stub_const('Committer::Config::Constants::CONFIG_FILE', config_file)
     allow(Dir).to receive(:home).and_return(temp_home)
     FileUtils.mkdir_p(config_dir)
     File.write(config_file, { api_key: 'dummyKey', scopes: [] }.to_yaml)

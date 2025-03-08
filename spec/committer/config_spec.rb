@@ -20,9 +20,9 @@ RSpec.describe Committer::Config::Accessor do
     # Stub Dir.home to return our temporary directory
     allow(Dir).to receive(:home).and_return(temp_home)
 
-    # Set up constants in Committer::Config to use our temp paths
-    stub_const('Committer::Config::Accessor::CONFIG_DIR', config_dir)
-    stub_const('Committer::Config::Accessor::CONFIG_FILE', config_file)
+    # Set up constants in Committer::Config::Constants to use our temp paths
+    stub_const('Committer::Config::Constants::CONFIG_DIR', config_dir)
+    stub_const('Committer::Config::Constants::CONFIG_FILE', config_file)
 
     # Mock git root detection
     allow_any_instance_of(described_class).to receive(:`)

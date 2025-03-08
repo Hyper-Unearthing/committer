@@ -3,19 +3,26 @@
 require 'yaml'
 require 'fileutils'
 require_relative '../committer_errors'
-require_relative 'accessor'
+require_relative 'constants'
 
 module Committer
   module Config
     class Writer
-      CONFIG_DIR = Accessor::CONFIG_DIR
-      CONFIG_FILE = Accessor::CONFIG_FILE
-      DEFAULT_CONFIG = Accessor::DEFAULT_CONFIG
 
-      def self.setup
+      attr_reader :config_dir
+
+      def initialize(config_dir)
+        @config_dir = config_dir
+      end
+
+      def config_file
+        File.join(@config_dir, Committer::Config::Constants::CONFIG_FILE_NAME)
+      end
+
+      def setup
         create_default_config
         puts 'Created config file at:'
-        puts CONFIG_FILE
+        puts config_file
         puts "\nPlease edit this file to add your Anthropic API key."
         puts 'Example config format:'
         puts '---'
@@ -27,12 +34,12 @@ module Committer
         puts '  - ui'
       end
 
-      def self.create_default_config
-        FileUtils.mkdir_p(CONFIG_DIR)
-        if File.exist?(CONFIG_FILE)
-          puts "Config file already exists at #{CONFIG_FILE}, skipping write"
+      def create_default_config
+        FileUtils.mkdir_p(@config_dir)
+        if File.exist?(config_file)
+          puts "Config file already exists at #{config_file}, skipping write"
         else
-          File.write(CONFIG_FILE, DEFAULT_CONFIG.to_yaml)
+          File.write(config_file, Committer::Config::Constants::DEFAULT_CONFIG.to_yaml)
         end
       end
     end
