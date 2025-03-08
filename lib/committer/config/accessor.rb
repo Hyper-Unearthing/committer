@@ -4,6 +4,7 @@ require 'yaml'
 require 'singleton'
 require_relative '../committer_errors'
 require_relative 'constants'
+require_relative '../git_helper'
 
 module Committer
   # Configuration management for the Committer gem
@@ -45,7 +46,7 @@ module Committer
       end
 
       def load_config_from_git_root
-        git_root = `git rev-parse --show-toplevel`.strip
+        git_root = Committer::GitHelper.repo_root
         return {} if git_root.empty?
 
         git_config_file = File.join(git_root, '.committer', 'config.yml')

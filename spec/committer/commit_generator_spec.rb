@@ -84,7 +84,7 @@ RSpec.describe Committer::CommitGenerator do
   describe '.check_git_status' do
     context 'when git diff command succeeds' do
       before do
-        allow(Open3).to receive(:capture3).with('git diff --staged').and_return([diff, '', double(success?: true)])
+        allow(Committer::GitHelper).to receive(:staged_diff).and_return(diff)
       end
 
       it 'returns the diff output' do
@@ -93,19 +93,16 @@ RSpec.describe Committer::CommitGenerator do
     end
 
     context 'when git diff command fails' do
-      let(:error_message) { 'fatal: not a git repository' }
-
       before do
-        allow(Open3).to receive(:capture3).with('git diff --staged').and_return(['', error_message,
-                                                                                 double(success?: false)])
+        allow(Committer::GitHelper).to receive(:staged_diff)
+          .and_raise(Committer::Error.new('Failed to get git diff: error message'))
         # Stub exit to prevent spec from actually exiting
-        allow(described_class).to receive(:exit)
+        allow(described_class).to receive(:exit).with(1)
         allow(described_class).to receive(:puts)
       end
 
       it 'outputs error message and exits' do
-        expect(described_class).to receive(:puts).with('Error executing git diff --staged:')
-        expect(described_class).to receive(:puts).with(error_message)
+        expect(described_class).to receive(:puts).with('Failed to get git diff: error message')
         expect(described_class).to receive(:exit).with(1)
         described_class.check_git_status
       end
@@ -113,13 +110,10 @@ RSpec.describe Committer::CommitGenerator do
 
     context 'when there are no staged changes' do
       before do
-        allow(Open3).to receive(:capture3).with('git diff --staged').and_return(['', '', double(success?: true)])
-        # Stub exit to prevent spec from actually exiting
-        allow(described_class).to receive(:exit)
-        allow(described_class).to receive(:puts)
+        allow(Committer::GitHelper).to receive(:staged_diff).and_return('')
       end
 
-      it 'outputs message and exits' do
+      it 'returns an empty string' do
         expect(described_class.check_git_status).to eq('')
       end
     end

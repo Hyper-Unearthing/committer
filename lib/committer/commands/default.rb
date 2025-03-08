@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require_relative '../git_helper'
+
 module Committer
   module Commands
     class Default
@@ -10,11 +12,7 @@ module Committer
         summary = commit_message[:summary]
         body = commit_message[:body]
         # Create git commit with the suggested message and open in editor
-        if body
-          system('git', 'commit', '-m', summary, '-m', body, '-e')
-        else
-          system('git', 'commit', '-m', summary, '-e')
-        end
+        Committer::GitHelper.commit(summary, body)
       end
 
       def self.execute(_args)

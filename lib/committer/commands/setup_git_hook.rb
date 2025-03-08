@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require_relative '../git_helper'
+
 module Committer
   module Commands
     class SetupGitHook
@@ -29,7 +31,7 @@ module Committer
       end
 
       def self.validate_git_root
-        git_toplevel = `git rev-parse --show-toplevel`.strip
+        git_toplevel = Committer::GitHelper.repo_root
         current_dir = Dir.pwd
         return if git_toplevel == current_dir
 

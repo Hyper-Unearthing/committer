@@ -25,9 +25,7 @@ RSpec.describe Committer::Config::Accessor do
     stub_const('Committer::Config::Constants::CONFIG_FILE', config_file)
 
     # Mock git root detection
-    allow_any_instance_of(described_class).to receive(:`)
-      .with('git rev-parse --show-toplevel')
-      .and_return("#{git_root}\n")
+    allow(Committer::GitHelper).to receive(:repo_root).and_return(git_root)
   end
 
   after do
@@ -111,7 +109,7 @@ RSpec.describe Committer::Config::Accessor do
       FileUtils.mkdir_p(config_dir)
       File.write(config_file, { 'api_key' => 'home_key', 'model' => 'home_model' }.to_yaml)
 
-      allow_any_instance_of(described_class).to receive(:`)
+      allow(Committer::GitHelper).to receive(:`)
         .with('git rev-parse --show-toplevel')
         .and_raise(StandardError.new('git error'))
     end
