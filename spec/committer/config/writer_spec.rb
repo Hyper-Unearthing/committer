@@ -9,6 +9,7 @@ RSpec.describe Committer::Config::Writer do
   let(:temp_home) { Dir.mktmpdir }
   let(:config_dir) { File.join(temp_home, '.committer') }
   let(:config_file) { File.join(config_dir, 'config.yml') }
+  let(:sample_formatting_rules_file) { File.join(config_dir, 'formatting_rules.txt.sample') }
   let(:writer) { described_class.new(config_dir) }
 
   before do
@@ -41,6 +42,14 @@ RSpec.describe Committer::Config::Writer do
       expect(File.exist?(config_file)).to be true
       config = YAML.load_file(config_file)
       expect(config).to eq(Committer::Config::Constants::DEFAULT_CONFIG)
+    end
+
+    it 'writes config sample config rules' do
+      expect(File.exist?(sample_formatting_rules_file)).to be false
+      writer.setup
+      expect(File.exist?(sample_formatting_rules_file)).to be true
+      contents = File.read(sample_formatting_rules_file)
+      expect(contents).to include('# Formatting rules for message')
     end
   end
 

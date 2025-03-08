@@ -20,6 +20,7 @@ module Committer
 
       def setup
         create_default_config
+        create_sample_formatting_rules
       end
 
       def write_config_file(file_path, contents)
@@ -31,6 +32,15 @@ module Committer
           File.write(file_path, contents)
           true
         end
+      end
+
+      def create_sample_formatting_rules
+        default_formatting_rules = File.read(File.join(Committer::Config::Constants::DEFAULT_PROMPT_PATH,
+                                                       Committer::Config::Constants::FORMATTING_RULES_FILE_NAME))
+        formatting_rules_file = File.join(@config_dir,
+                                          "#{Committer::Config::Constants::FORMATTING_RULES_FILE_NAME}.sample")
+        wrote_file = write_config_file(formatting_rules_file, default_formatting_rules)
+        nil unless wrote_file
       end
 
       def create_default_config
