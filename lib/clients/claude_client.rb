@@ -12,7 +12,7 @@ module Clients
     class ConfigError < StandardError; end
 
     def initialize
-      @config = Committer::Config.load
+      @config = Committer::Config.instance
 
       return unless @config['api_key'].nil? || @config['api_key'].empty?
 

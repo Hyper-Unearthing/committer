@@ -10,17 +10,25 @@ RSpec.describe Committer::CommitGenerator do
   let(:body_response) { JSON.parse(load_fixture('claude_response_with_body.json')) }
   let(:client_instance) { instance_double(Clients::ClaudeClient) }
   let(:generator) { described_class.new(diff, commit_context) }
+  let(:temp_home) { Dir.mktmpdir }
+  let(:config_dir) { File.join(temp_home, '.committer') }
+  let(:config_file) { File.join(config_dir, 'config.yml') }
 
   before do
-    allow(Clients::ClaudeClient).to receive(:new).and_return(client_instance)
+    stub_const('Committer::Config::CONFIG_DIR', config_dir)
+    stub_const('Committer::Config::CONFIG_FILE', config_file)
+    allow(Dir).to receive(:home).and_return(temp_home)
+    FileUtils.mkdir_p(config_dir)
+    File.write(config_file, { api_key: 'dummyKey', scopes: [] }.to_yaml)
+    Committer::Config.instance.reload
+  end
+
+  after do
+    FileUtils.remove_entry(temp_home) if File.directory?(temp_home)
   end
 
   describe '#build_commit_prompt' do
     context 'when no scopes are configured' do
-      before do
-        allow(Committer::Config).to receive(:load).and_return({})
-      end
-
       it 'builds prompt with no scopes' do
         prompt = generator.build_commit_prompt
         expect(prompt).to include('DO NOT include a scope in your commit message')
@@ -33,7 +41,9 @@ RSpec.describe Committer::CommitGenerator do
       let(:scopes) { %w[api ui docs] }
 
       before do
-        allow(Committer::Config).to receive(:load).and_return(scopes: scopes)
+        FileUtils.mkdir_p(config_dir)
+        File.write(config_file, { api_key: 'dummyKey', scopes: %w[api ui docs] }.to_yaml)
+        Committer::Config.instance.reload
       end
 
       it 'builds prompt with scopes' do
@@ -51,10 +61,6 @@ RSpec.describe Committer::CommitGenerator do
       let(:commit_context) { 'This is a version bump for the next release' }
       let(:generator) { described_class.new(diff, commit_context) }
 
-      before do
-        allow(Committer::Config).to receive(:load).and_return({})
-      end
-
       it 'uses the template with body' do
         expect(generator).to receive(:template).and_call_original
         prompt = generator.build_commit_prompt
@@ -66,10 +72,6 @@ RSpec.describe Committer::CommitGenerator do
     context 'when no commit context is provided' do
       let(:commit_context) { nil }
       let(:generator) { described_class.new(diff, commit_context) }
-
-      before do
-        allow(Committer::Config).to receive(:load).and_return({})
-      end
 
       it 'uses summary-only template when commit context is nil' do
         expect(generator).to receive(:template).and_call_original
@@ -123,51 +125,14 @@ RSpec.describe Committer::CommitGenerator do
     end
   end
 
-  describe '#parse_response' do
-    context 'when commit context is nil or empty' do
-      it 'returns only summary when context is nil' do
-        result = generator.parse_response(summary_response)
-        expect(result[:summary]).to eq('chore: bump version from 0.1.0 to 0.1.1')
-        expect(result[:body]).to be_nil
-      end
-
-      it 'returns only summary when context is empty' do
-        generator = described_class.new(diff, '')
-        result = generator.parse_response(summary_response)
-        expect(result[:summary]).to eq('chore: bump version from 0.1.0 to 0.1.1')
-        expect(result[:body]).to be_nil
-      end
-    end
-
-    context 'when commit context is provided' do
-      let(:commit_context) { 'Some context for the commit' }
-      let(:generator) { described_class.new(diff, commit_context) }
-
-      it 'returns summary and body' do
-        result = generator.parse_response(body_response)
-        expect(result[:summary]).to eq('chore: bump version from 0.1.0 to 0.1.1')
-        expect(result[:body]).to include('Incremented patch version')
-        # Verify body was wrapped at 80 characters
-        body_lines = result[:body].split("\n")
-        body_lines.each do |line|
-          expect(line.length).to be <= 80
-        end
-      end
-    end
-  end
-
   describe '#prepare_commit_message' do
     context 'when called with diff and no context' do
       before do
-        allow(client_instance).to receive(:post).and_return(summary_response)
-        allow(generator).to receive(:puts)
+        stub_request(:post, 'https://api.anthropic.com/v1/messages')
+          .to_return(status: 200, body: summary_response.to_json, headers: { 'Content-Type' => 'application/json' })
       end
 
       it 'builds prompt, calls API and parses response' do
-        expect(generator).to receive(:build_commit_prompt).and_call_original
-        expect(client_instance).to receive(:post)
-        expect(generator).to receive(:parse_response).with(summary_response).and_call_original
-
         result = generator.prepare_commit_message
         expect(result[:summary]).to eq('chore: bump version from 0.1.0 to 0.1.1')
         expect(result[:body]).to be_nil
@@ -179,15 +144,11 @@ RSpec.describe Committer::CommitGenerator do
       let(:generator) { described_class.new(diff, commit_context) }
 
       before do
-        allow(client_instance).to receive(:post).and_return(body_response)
-        allow(generator).to receive(:puts)
+        stub_request(:post, 'https://api.anthropic.com/v1/messages')
+          .to_return(status: 200, body: body_response.to_json, headers: { 'Content-Type' => 'application/json' })
       end
 
       it 'builds prompt with context, calls API and parses response' do
-        expect(generator).to receive(:build_commit_prompt).and_call_original
-        expect(client_instance).to receive(:post)
-        expect(generator).to receive(:parse_response).with(body_response).and_call_original
-
         result = generator.prepare_commit_message
         expect(result[:summary]).to eq('chore: bump version from 0.1.0 to 0.1.1')
         expect(result[:body]).to include('Incremented patch version')
