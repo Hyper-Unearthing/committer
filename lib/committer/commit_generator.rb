@@ -55,8 +55,8 @@ module Committer
       end
     end
 
-    def prepare_commit_message
-      client = Clients::ClaudeClient.new
+    def prepare_commit_message(client_class = Clients::ClaudeClient)
+      client = client_class.new
 
       prompt = build_commit_prompt
       response = client.post(prompt)
