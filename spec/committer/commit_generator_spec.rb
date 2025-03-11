@@ -200,5 +200,27 @@ RSpec.describe Committer::CommitGenerator do
         expect(result[:body]).to include('Incremented patch version')
       end
     end
+
+    context 'when called with a different client' do
+      class Clients::SomeOtherClient
+        def post(_prompt); end
+      end
+
+      let(:client_instance) { instance_double(Clients::SomeOtherClient) }
+      let(:generator) { described_class.new(diff, commit_context) }
+
+      before do
+        allow(Clients::SomeOtherClient).to receive(:new).and_return(client_instance)
+        allow(generator).to receive(:build_commit_prompt).and_return('my prompt')
+        allow(generator).to receive(:parse_response)
+        allow(client_instance).to receive(:post)
+      end
+
+      it 'builds the prompt and passes it to the client' do
+        generator.prepare_commit_message(Clients::SomeOtherClient)
+
+        expect(client_instance).to have_received(:post).with('my prompt')
+      end
+    end
   end
 end
