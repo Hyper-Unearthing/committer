@@ -8,11 +8,9 @@ RSpec.describe Committer::Config::Accessor do
   let(:temp_home) { Dir.mktmpdir }
   let(:config_dir) { File.join(temp_home, '.committer') }
   let(:config_file) { File.join(config_dir, 'config.yml') }
-  let(:home_formatting_rules) { File.join(config_dir, 'formatting_rules.txt') }
   let(:git_root) { Dir.mktmpdir }
   let(:git_config_dir) { File.join(git_root, '.committer') }
   let(:git_config_file) { File.join(git_config_dir, 'config.yml') }
-  let(:git_formatting_rules) { File.join(git_config_dir, 'formatting_rules.txt') }
   let(:config_instance) { described_class.instance }
 
   before do
@@ -35,38 +33,38 @@ RSpec.describe Committer::Config::Accessor do
     FileUtils.remove_entry(git_root) if File.directory?(git_root)
   end
 
-  describe 'custom formatting rules' do
-    before do
-      FileUtils.mkdir_p(config_dir)
-      File.write(config_file, { 'api_key' => 'home_key', 'model' => 'home_model', 'scopes' => ['home'] }.to_yaml)
-    end
-
-    context 'when formatting rules exist in home root' do
+  describe 'loads file based on config priority paths' do
+    context 'when file exists in home root' do
       before do
         FileUtils.mkdir_p(config_dir)
-        File.write(home_formatting_rules, '# Custom formatting rules defined in home')
+        File.write(config_file, { 'api_key' => 'home_key', 'model' => 'home_model', 'scopes' => ['home'] }.to_yaml)
       end
 
-      it 'loads custom formatting rules' do
-        formatting_rules = config_instance.load_formatting_rules
-        expect(formatting_rules).to include('# Custom formatting rules defined in home')
+      it 'loads file from home' do
+        formatting_rules = config_instance.read_path_prioritized_file('config.yml')
+        expect(formatting_rules).to include('api_key: home_key')
       end
 
-      context 'when formatting rules exist in git root' do
+      context 'when file exists in home and in git root' do
         before do
           FileUtils.mkdir_p(git_config_dir)
-          File.write(git_formatting_rules, '# Custom formatting rules defined in git')
+          File.write(git_config_file, { 'api_key' => 'git_key', 'model' => 'home_model', 'scopes' => ['home'] }.to_yaml)
         end
 
         it 'loads custom formatting rules from git root instead of home' do
-          formatting_rules = config_instance.load_formatting_rules
-          expect(formatting_rules).to include('# Custom formatting rules defined in git')
+          formatting_rules = config_instance.read_path_prioritized_file('config.yml')
+          expect(formatting_rules).to include('api_key: git_key')
         end
       end
     end
+
     context 'when no custom files exist' do
-      it 'loads default formatting rules' do
-        formatting_rules = config_instance.load_formatting_rules
+      before do
+        FileUtils.mkdir_p(git_config_dir)
+        File.write(git_config_file, { 'api_key' => '', 'model' => '', 'scopes' => [] }.to_yaml)
+      end
+      it 'loads from default file' do
+        formatting_rules = config_instance.read_path_prioritized_file('formatting_rules.txt')
         expect(formatting_rules).to include('# Formatting rules for message')
       end
     end
@@ -130,15 +128,15 @@ RSpec.describe Committer::Config::Accessor do
       FileUtils.mkdir_p(config_dir)
       File.write(config_file, 'invalid:yaml:[}')
 
-      # Make sure YAML.load_file raises an exception for the home config
-      allow(YAML).to receive(:load_file).with(config_file).and_raise(
+      # Make sure YAML.read_path_prioritized_file raises an exception for the home config
+      allow(YAML).to receive(:safe_load).with(config_file).and_raise(
         Psych::SyntaxError.new('file', 0, 0, 0, 'invalid syntax', 'problem')
       )
       # But allow normal behavior for other files
-      allow(YAML).to receive(:load_file).and_call_original
+      allow(YAML).to receive(:safe_load).and_call_original
     end
 
-    it 'continues execution and uses default config' do
+    it 'raises format error' do
       expect { config_instance }.to raise_error(Committer::ConfigErrors::FormatError)
     end
   end

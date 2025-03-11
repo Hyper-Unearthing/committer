@@ -35,7 +35,7 @@ module Committer
       end
 
       def create_sample_formatting_rules
-        default_formatting_rules = File.read(File.join(Committer::Config::Constants::DEFAULT_PROMPT_PATH,
+        default_formatting_rules = File.read(File.join(Committer::Config::Constants::DEFAULTS_PATH,
                                                        Committer::Config::Constants::FORMATTING_RULES_FILE_NAME))
         formatting_rules_file = File.join(@config_dir,
                                           "#{Committer::Config::Constants::FORMATTING_RULES_FILE_NAME}.sample")
