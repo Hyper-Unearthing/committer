@@ -16,9 +16,8 @@ module Committer
     end
 
     def build_commit_prompt
-      format(template,
-             diff: @diff,
-             commit_context: @commit_context)
+      scopes = Committer::Config::Accessor.instance[:scopes] || []
+      Committer::PromptTemplates.build_prompt(diff, scopes, commit_context)
     end
 
     def template

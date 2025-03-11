@@ -43,14 +43,6 @@ RSpec.describe Committer::Config::Writer do
       config = YAML.load_file(config_file)
       expect(config).to eq(Committer::Config::Constants::DEFAULT_CONFIG)
     end
-
-    it 'writes config sample config rules' do
-      expect(File.exist?(sample_formatting_rules_file)).to be false
-      writer.setup
-      expect(File.exist?(sample_formatting_rules_file)).to be true
-      contents = File.read(sample_formatting_rules_file)
-      expect(contents).to include('# Formatting rules for message')
-    end
   end
 
   describe '#create_default_config' do

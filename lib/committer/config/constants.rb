@@ -6,7 +6,8 @@ module Committer
       CONFIG_DIR = File.join(Dir.home, '.committer')
       DEFAULTS_PATH = File.join(File.dirname(__FILE__), './defaults')
 
-      FORMATTING_RULES_FILE_NAME = 'formatting_rules.txt'
+      COMMIT_MESSAGE_ONLY_PROMPT_FILE_NAME = 'commit_message_only.prompt'
+      COMMIT_MESSAGE_AND_BODY_PROMPT_FILE_NAME = 'commit_message_and_body.prompt'
       CONFIG_FILE_NAME = 'config.yml'
 
       DEFAULT_CONFIG = {

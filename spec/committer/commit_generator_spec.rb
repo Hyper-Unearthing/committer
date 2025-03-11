@@ -62,7 +62,6 @@ RSpec.describe Committer::CommitGenerator do
       let(:generator) { described_class.new(diff, commit_context) }
 
       it 'uses the template with body' do
-        expect(generator).to receive(:template).and_call_original
         prompt = generator.build_commit_prompt
         expect(prompt).to include(commit_context)
         expect(prompt).to include('Respond ONLY with the commit message text (message and body), nothing else.')
@@ -74,7 +73,6 @@ RSpec.describe Committer::CommitGenerator do
       let(:generator) { described_class.new(diff, commit_context) }
 
       it 'uses summary-only template when commit context is nil' do
-        expect(generator).to receive(:template).and_call_original
         prompt = generator.build_commit_prompt
         expect(prompt).to include('Respond ONLY with the commit message line, nothing else.')
       end
