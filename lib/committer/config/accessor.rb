@@ -28,60 +28,56 @@ module Committer
 
       def load_config
         # Load configs from both locations and merge them
-        home_config = load_config_from_path(Committer::Config::Constants::CONFIG_FILE)
-        git_root_config = load_config_from_git_root
+
+        home_config = load_yml_file(read_file_from_home(Committer::Config::Constants::CONFIG_FILE_NAME))
+        git_root_config = load_yml_file(read_file_from_git_root(Committer::Config::Constants::CONFIG_FILE_NAME))
         raise Committer::ConfigErrors::NotSetup if home_config.empty? && git_root_config.empty?
+
+        unless home_config.is_a?(Hash) && git_root_config.is_a?(Hash)
+          raise Committer::ConfigErrors::FormatError,
+                'Config file must be a YAML hash'
+        end
 
         # Merge configs with git root taking precedence
         home_config.merge(git_root_config)
       end
 
-      def load_config_from_path(path)
-        return {} unless File.exist?(path)
-
-        result = YAML.load_file(path)
-        raise Committer::ConfigErrors::FormatError, 'Config file must be a YAML hash' unless result.is_a?(Hash)
-
-        result
+      def load_yml_file(contents)
+        YAML.safe_load(contents, permitted_classes: [Symbol, NilClass, String, Array]) || {}
       end
 
-      def load_file_from_path(path)
+      def read_file_from_path(path)
         return '' unless File.exist?(path)
 
         File.read(path)
       end
 
       def load_formatting_rules
-        git_root = Committer::GitHelper.repo_root
-        unless git_root.empty?
-          formatting_rules_git_path = File.join(git_root, '.committer',
-                                                Committer::Config::Constants::FORMATTING_RULES_FILE_NAME)
-        end
+        read_path_prioritized_file(Committer::Config::Constants::FORMATTING_RULES_FILE_NAME)
+      end
 
-        git_path_contents = load_file_from_path(formatting_rules_git_path) if formatting_rules_git_path
+      def read_file_from_git_root(file_name)
+        read_file_from_path(File.join(Committer::GitHelper.repo_root, '.committer', file_name))
+      end
+
+      def read_file_from_home(file_name)
+        read_file_from_path(File.join(Committer::Config::Constants::CONFIG_DIR, file_name))
+      end
+
+      def load_default_file(file_name)
+        read_file_from_path(File.join(Committer::Config::Constants::DEFAULTS_PATH, file_name))
+      end
+
+      def read_path_prioritized_file(file_name)
+        git_path_contents = read_file_from_git_root(file_name)
 
         return git_path_contents unless git_path_contents.empty?
 
-        home_path = File.join(Committer::Config::Constants::CONFIG_DIR,
-                              Committer::Config::Constants::FORMATTING_RULES_FILE_NAME)
-
-        home_path_contents = load_file_from_path(home_path)
+        home_path_contents = read_file_from_home(file_name)
 
         return home_path_contents unless home_path_contents.empty?
 
-        default_path = File.join(Committer::Config::Constants::DEFAULT_PROMPT_PATH,
-                                 Committer::Config::Constants::FORMATTING_RULES_FILE_NAME)
-        load_file_from_path(default_path)
-      end
-
-      def load_config_from_git_root
-        git_root = Committer::GitHelper.repo_root
-        return {} if git_root.empty?
-
-        git_config_file = File.join(git_root, '.committer', 'config.yml')
-        load_config_from_path(git_config_file)
-      rescue StandardError
-        {}
+        load_default_file(file_name)
       end
 
       # Force reload configuration (useful for testing)
