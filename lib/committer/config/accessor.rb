@@ -52,10 +52,6 @@ module Committer
         File.read(path)
       end
 
-      def load_formatting_rules
-        read_path_prioritized_file(Committer::Config::Constants::FORMATTING_RULES_FILE_NAME)
-      end
-
       def read_file_from_git_root(file_name)
         read_file_from_path(File.join(Committer::GitHelper.repo_root, '.committer', file_name))
       end

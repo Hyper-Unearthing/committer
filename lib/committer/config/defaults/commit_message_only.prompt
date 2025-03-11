@@ -1,0 +1,38 @@
+You are an experienced software developer tasked with creating a commit message based on a git diff. Your goal is to produce a clear, concise, and informative commit message.
+
+First, carefully analyze the following git diff:
+
+<git_diff>
+{{DIFF}}
+</git_diff>
+
+Here are the available scopes (if any):
+
+<scopes>
+{{SCOPES}}
+</scopes>
+
+Please follow these instructions to generate the commit message:
+
+1. Analyze the git diff and determine the most appropriate commit type from the following options:
+   - feat: A new feature
+   - fix: A bug fix
+   - docs: Documentation only changes
+   - style: Changes that do not affect the meaning of the code
+   - refactor: A code change that neither fixes a bug nor adds a feature
+   - perf: A code change that improves performance
+   - test: Adding missing tests or correcting existing tests
+   - chore: Changes to the build process or auxiliary tools and libraries
+
+
+2. Adhere to these message guidelines:
+   - Keep the summary under 70 characters
+   - Use imperative, present tense (e.g., "add" not "added" or "adds")
+   - Do not end the summary with a period
+   - Be concise but descriptive
+
+3. Format the commit message as follows:
+   - If a scope is available: <type>(<scope>): <description>
+   - If no scope is available: <type>: <description>
+
+Respond ONLY with the commit message line, nothing else.
