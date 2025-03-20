@@ -1,0 +1,20 @@
+{
+  "name": "committer",
+  "version": "0.0.1",
+  "description": "eval for committer gem",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Hyper-Unearthing/committer.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Hyper-Unearthing/committer/issues"
+  },
+  "homepage": "https://github.com/Hyper-Unearthing/committer#readme",
+  "dependencies": {
+    "clipanion": "^4.0.0-rc.4",
+    "promptfoo": "^0.107.2",
+    "sqlite3": "^5.1.7"
+  }
+}
