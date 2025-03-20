@@ -1,2 +1,5 @@
 .rspec_status
 pkg
+node_modules
+promptfoo-errors.log
+electron-eval/

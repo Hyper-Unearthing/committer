@@ -96,6 +96,7 @@ committer setup-git-hook
 ```
 
 This command will:
+
 1. Verify you're in the root of a git repository
 2. Install the prepare-commit-msg hook in your `.git/hooks` directory
 3. Make the hook executable
@@ -103,6 +104,7 @@ This command will:
 ### How the Git Hook Works
 
 Once installed, the git hook will:
+
 1. Automatically run whenever you execute `git commit`
 2. Generate an AI-powered commit message based on your staged changes
 3. Pre-fill your commit message editor with the generated message
@@ -125,6 +127,70 @@ Committer uses RSpec for testing. To run the tests:
 ```bash
 bundle install
 bundle exec rake spec
+```
+
+## Evaluation Tools
+
+The `eval` directory contains tools for benchmarking and testing commit message generation across different AI models. These tools help evaluate the quality and consistency of generated commit messages.
+
+### Usage
+
+1. **Install dependencies**:
+
+   ```bash
+   npm install
+   npm install -g promptfoo
+   ```
+
+2. **Set environment variables**:
+
+   ```bash
+   export ANTHROPIC_API_KEY=your_anthropic_api_key_here
+   export OPENAI_API_KEY=your_openai_api_key_here
+   ```
+
+3. **Dump commits** from a repository to a database:
+
+   ```bash
+   node eval.mjs dump-commits --eval-data-dir ./path --repo ./repo-path
+   ```
+
+4. **Process commits** for evaluation:
+
+   ```bash
+   node eval.mjs process-commits --eval-data-dir ./path
+   ```
+
+5. **Run evaluations** against different AI models:
+   ```bash
+   node eval.mjs run-evaluation --eval-data-dir ./path [--sha commit_sha] [--limit number]
+   ```
+
+The system compares multiple AI models (Claude 3.7 Sonnet, Claude 3.5 Haiku, GPT-4o, GPT-4o Mini) and tests their ability to generate properly formatted conventional commit messages based on commit diffs.
+
+### Viewing Evaluation Results prompt versions
+
+select your verison from https://drive.google.com/drive/folders/1xHpOkNSss2PM-cnLKGaCHLNfWvxl9hAX
+
+download .promptfoo file and move it to ~/.promptfoo promptfoo.sqlite
+
+```bash
+npm install -g promptfoo
+promptfoo view -y
+```
+
+### Running Evaluation for prompt versions
+
+select your verison from https://drive.google.com/drive/folders/1xHpOkNSss2PM-cnLKGaCHLNfWvxl9hAX
+
+download .electron-eval folder and move it the root fo this project
+
+```bash
+npm install
+npm install -g promptfoo
+export ANTHROPIC_API_KEY=your_anthropic_api_key_here
+export OPENAI_API_KEY=your_openai_api_key_here
+node eval.mjs run-evaluation --eval-data-dir ./electron-eval
 ```
 
 ## License
