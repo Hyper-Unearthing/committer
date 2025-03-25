@@ -25,6 +25,29 @@ RSpec.describe Committer::GitHelper do
         Committer::GitHelper.staged_diff
       end.to raise_error(Committer::Error, 'Failed to get git diff: error message')
     end
+
+    it 'properly handles UTF-8 characters in diff output' do
+      utf8_diff = load_fixture('utf-8-diff.txt')
+      allow(Open3).to receive(:capture3).with('git diff --staged').and_return([utf8_diff, '',
+                                                                               double(success?: true)])
+      result = Committer::GitHelper.staged_diff
+      expect(result.encoding.name).to eq('UTF-8')
+      expect(result.valid_encoding?).to be true
+      expect(result).to eq(utf8_diff)
+    end
+
+    it 'handles invalid UTF-8 characters in diff output' do
+      invalid_utf8_diff = load_fixture('invalid-utf8-diff.txt')
+      # Make sure the test fixture has invalid UTF-8 characters
+      invalid_utf8_data = invalid_utf8_diff.dup.force_encoding('UTF-8')
+      expect(invalid_utf8_data.valid_encoding?).to be false
+
+      allow(Open3).to receive(:capture3).with('git diff --staged').and_return([invalid_utf8_diff, '',
+                                                                               double(success?: true)])
+      result = Committer::GitHelper.staged_diff
+      expect(result.encoding.name).to eq('UTF-8')
+      expect(result.valid_encoding?).to be true
+    end
   end
 
   describe '.commit' do

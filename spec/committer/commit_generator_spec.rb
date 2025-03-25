@@ -4,7 +4,7 @@ require 'spec_helper'
 require 'committer/commit_generator'
 
 RSpec.describe Committer::CommitGenerator do
-  let(:diff) { load_fixture('sample_diff.txt') }
+  let(:diff) { load_fixture('utf-8-diff.txt') }
   let(:commit_context) { nil }
   let(:summary_response) { JSON.parse(load_fixture('claude_response_summary.json')) }
   let(:body_response) { JSON.parse(load_fixture('claude_response_with_body.json')) }
