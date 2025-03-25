@@ -22,7 +22,7 @@ module Committer
         stdout, stderr, status = Open3.capture3('git diff --staged')
         raise Committer::Error, "Failed to get git diff: #{stderr}" unless status.success?
 
-        stdout
+        stdout.dup.force_encoding('UTF-8').scrub
       end
     end
   end
