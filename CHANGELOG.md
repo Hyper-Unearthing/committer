@@ -2,8 +2,9 @@
 
 Auto-generated from git commits.
 
-v0.5.1 (2025-03-25 15:30:25 +0800)
+v0.5.1 (2025-03-26 15:12:47 +0800)
 
+- bump version [62720b7]
 - fix: ensure git diff output is properly encoded as UTF-8 [da2d184]
 - feat: improve the prompt based on last evaluation run [a4017bd]
 - feat: build evaluation framework [a0dbdab]
