@@ -1,9 +1,9 @@
 # frozen_string_literal: true
 
 require 'yaml'
+require 'llm_gateway'
 require_relative 'config/accessor'
 require_relative 'prompt_templates'
-require_relative '../clients/claude_client'
 require_relative 'git_helper'
 
 module Committer
@@ -36,7 +36,7 @@ module Committer
     end
 
     def parse_response(response)
-      text = response.dig('content', 0, 'text')
+      text = response.dig(:choices, 0, :content, 0, :text)
 
       # If user didn't provide context, response should only be a summary line
       if @commit_context.nil? || @commit_context.empty?
@@ -54,11 +54,19 @@ module Committer
       end
     end
 
-    def prepare_commit_message(client_class = Clients::ClaudeClient)
-      client = client_class.new
+    def prepare_commit_message
+      config = Committer::Config::Accessor.instance
+
+      if config['api_key'].nil? || config['api_key'].empty?
+        raise StandardError,
+              "API key not configured. Run 'committer setup' and edit ~/.committer/config.yml to add your API key."
+      end
+
+      ENV['ANTHROPIC_API_KEY'] = config['api_key']
 
       prompt = build_commit_prompt
-      response = client.post(prompt)
+      response = LlmGateway::Client.chat(config['model'], prompt)
+
       parse_response(response)
     end
   end

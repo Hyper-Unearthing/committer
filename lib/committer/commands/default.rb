@@ -27,7 +27,7 @@ module Committer
         puts 'Why are you making this change? (Press Enter to skip)'
         commit_context = gets.chomp
         execute_commit(diff, commit_context)
-      rescue Clients::ClaudeClient::ConfigError, StandardError => e
+      rescue StandardError => e
         puts "Error: #{e.message}"
         exit 1
       end

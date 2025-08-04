@@ -8,7 +8,6 @@ RSpec.describe Committer::CommitGenerator do
   let(:commit_context) { nil }
   let(:summary_response) { JSON.parse(load_fixture('claude_response_summary.json')) }
   let(:body_response) { JSON.parse(load_fixture('claude_response_with_body.json')) }
-  let(:client_instance) { instance_double(Clients::ClaudeClient) }
   let(:generator) { described_class.new(diff, commit_context) }
   let(:temp_home) { Dir.mktmpdir }
   let(:config_dir) { File.join(temp_home, '.committer') }
@@ -118,13 +117,31 @@ RSpec.describe Committer::CommitGenerator do
   end
 
   describe '#prepare_commit_message' do
-    context 'when called with diff and no context' do
-      before do
-        stub_request(:post, 'https://api.anthropic.com/v1/messages')
-          .to_return(status: 200, body: summary_response.to_json, headers: { 'Content-Type' => 'application/json' })
-      end
+    let(:mock_response) do
+      {
+        choices: [
+          {
+            content: [
+              {
+                text: "chore: bump version from 0.1.0 to 0.1.1",
+                type: "text"
+              }
+            ]
+          }
+        ],
+        usage: { queue_time: 0.05646005700000001, prompt_tokens: 237, prompt_time: 0.01188805, completion_tokens: 11,
+                 completion_time: 0.058864509, total_tokens: 248, total_time: 0.070752559 },
+        model: "llama-3.3-70b-versatile",
+        id: "chatcmpl-a11a25f8-255b-44d3-b2bf-bebe3955f202"
+      }
+    end
 
-      it 'builds prompt, calls API and parses response' do
+    before do
+      allow(LlmGateway::Client).to receive(:chat).and_return(mock_response)
+    end
+
+    context 'when called with diff and no context' do
+      it 'builds prompt, calls LlmGateway and parses response' do
         result = generator.prepare_commit_message
         expect(result[:summary]).to eq('chore: bump version from 0.1.0 to 0.1.1')
         expect(result[:body]).to be_nil
@@ -134,34 +151,33 @@ RSpec.describe Committer::CommitGenerator do
     context 'when called with diff and context' do
       let(:commit_context) { 'Context for the commit' }
       let(:generator) { described_class.new(diff, commit_context) }
-
-      before do
-        stub_request(:post, 'https://api.anthropic.com/v1/messages')
-          .to_return(status: 200, body: body_response.to_json, headers: { 'Content-Type' => 'application/json' })
+      let(:mock_response_with_body) do
+        {
+          choices: [
+            {
+              content: [
+                {
+                  text: "chore: bump version from 0.1.0 to 0.1.1\n\nIncremented patch version from 0.1.0 to 0.1.1 to prepare for next release",
+                  type: "text"
+                }
+              ]
+            }
+          ],
+          usage: { queue_time: 0.05646005700000001, prompt_tokens: 237, prompt_time: 0.01188805, completion_tokens: 11,
+                   completion_time: 0.058864509, total_tokens: 248, total_time: 0.070752559 },
+          model: "llama-3.3-70b-versatile",
+          id: "chatcmpl-a11a25f8-255b-44d3-b2bf-bebe3955f202"
+        }
       end
 
-      it 'builds prompt with context, calls API and parses response' do
+      before do
+        allow(LlmGateway::Client).to receive(:chat).and_return(mock_response_with_body)
+      end
+
+      it 'builds prompt with context, calls LlmGateway and parses response' do
         result = generator.prepare_commit_message
         expect(result[:summary]).to eq('chore: bump version from 0.1.0 to 0.1.1')
         expect(result[:body]).to include('Incremented patch version')
-      end
-    end
-
-    context 'when called with a different client' do
-      let(:client_class) { class_double('Clients::SomeOtherClient', new: client_instance).as_stubbed_const }
-      let(:client_instance) { instance_double('Clients::SomeOtherClient', post: nil) }
-      let(:generator) { described_class.new(diff, commit_context) }
-
-      before do
-        allow(generator).to receive(:build_commit_prompt).and_return('my prompt')
-        allow(generator).to receive(:parse_response)
-        allow(client_instance).to receive(:post)
-      end
-
-      it 'builds the prompt and passes it to the client' do
-        generator.prepare_commit_message(client_class)
-
-        expect(client_instance).to have_received(:post).with('my prompt')
       end
     end
   end

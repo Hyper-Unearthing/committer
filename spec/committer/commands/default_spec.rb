@@ -50,8 +50,8 @@ RSpec.describe Committer::Commands::Default do
         described_class.execute([])
       end
 
-      it 'handles ConfigError' do
-        expected_error = Clients::ClaudeClient::ConfigError.new('Config error')
+      it 'handles any StandardError' do
+        expected_error = StandardError.new('Config error')
         allow(Committer::CommitGenerator).to receive(:check_git_status).and_raise(expected_error)
         expect(described_class).to receive(:puts).with('Error: Config error')
         expect(described_class).to receive(:exit).with(1)

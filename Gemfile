@@ -4,6 +4,7 @@ source 'https://rubygems.org'
 
 # Specify your gem dependencies here
 gem 'bundler', '~> 2.2'
+gem 'llm_gateway'
 
 group :development, :test do
   gem 'pry', '~> 0.15.0'

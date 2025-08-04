@@ -19,7 +19,7 @@ module Committer
           #{body}
         OUTPUT
         exit 0
-      rescue Clients::ClaudeClient::ConfigError => e
+      rescue StandardError => e
         puts "Error: #{e.message}"
         exit 1
       rescue StandardError
