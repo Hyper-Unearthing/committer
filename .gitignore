@@ -3,3 +3,4 @@ pkg
 node_modules
 promptfoo-errors.log
 electron-eval/
+coverage/
